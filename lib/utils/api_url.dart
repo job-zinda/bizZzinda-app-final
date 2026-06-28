@@ -220,4 +220,13 @@ class Api {
 
   static final String getMySubscriptionstore =
       "${AppUrl.baseurl}/api/v1/subscription/getMySubscription";
+  static const String sharedOfferingDetails =
+      '$baseurl/api/v1/offering/sharedOfferingDetails';
+  static String otherUserProducts(String profileId) =>
+      "$baseurl/api/v1/profile-catalog/listProfileProducts/$profileId";
+
+  static String otherUserServices(String profileId) =>
+      "$baseurl/api/v1/profile-catalog/listProfileServices/$profileId";
+  static String deleteMessage(String messageId) =>
+      "$baseurl/api/v1/biz-chat/deleteMessage/$messageId";
 }

@@ -15,6 +15,7 @@ import 'package:biz_zinda/model/logged_in_user.dart';
 import 'package:provider/provider.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'dart:io';
+import 'package:biz_zinda/services/app_link_service.dart';
 
 class AddUserPage extends StatefulWidget {
   final String email;
@@ -241,6 +242,22 @@ class _AddUserPageState extends State<AddUserPage> {
           LoggedInUser.login(data);
 
           if (!mounted) return;
+
+          final pendingLink = AppLinkService().pendingDeepLink;
+
+          if (pendingLink != null && pendingLink.isNotEmpty) {
+
+            AppLinkService().pendingDeepLink = null;
+
+            context.go(
+              pendingLink.startsWith('/')
+                  ? pendingLink
+                  : '/$pendingLink',
+            );
+
+            return;
+          }
+
           context.goNamed(PPages.loginSplashUi);
 
         } catch (e) {

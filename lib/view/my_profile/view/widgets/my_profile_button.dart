@@ -14,40 +14,65 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 class MyProfileButtonUi extends StatelessWidget {
   const MyProfileButtonUi({super.key});
+  Future<void> _shareUserProfile(
+      BuildContext context,
+      String userId,
+      String userName,
+      ) async {
 
-  Future<void> _shareUserProfile(BuildContext context, String userId, String userName) async {
-    // [REMOVED] Create an instance of FirebaseDynamicLinkService
-    // [REMOVED] final FirebaseDynamicLinkService dynamicLinkService = FirebaseDynamicLinkService();
-    // Show loading indicator
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Generating shareable link...'))
+    final String profileUrl =
+        'https://bizzinda.com/profile/$userId';
+
+    const String playStoreUrl =
+        'https://play.google.com/store/apps/details?id=com.biz_zinda.app';
+
+    final String shareText =
+        "🔍 Discover $userName on Biz Zinda!\n\n"
+        "👉 View Profile:\n"
+        "$profileUrl\n\n"
+        "📱 Download Biz Zinda:\n"
+        "$playStoreUrl";
+
+    await Share.share(
+      shareText,
+      subject: 'Check out this profile on Biz Zinda!',
     );
-    
-    // try {
-      // Generate a Firebase Dynamic Link
-      // [REMOVED] final String dynamicLink = await dynamicLinkService.createProfileDynamicLink(userId);
-      
-      // Log the dynamic link for debugging
-      // print('Sharing profile with Firebase Dynamic Link: $dynamicLink');
-      
-      // Create a shareable message with user information and the dynamic link
-      
-      // Fallback to regular sharing if dynamic link fails
-      final String webUrl = 'https://jobzinda.com/profile/$userId';
-      const String playStoreUrl = 'https://play.google.com/store/apps/details?id=com.jobZinda.customers';
-      const String appStoreUrl = 'https://apps.apple.com/app/job-zinda/id123456789';
-      
-      final String fallbackShareText = "🔍 Discover $userName on Job Zinda!\n\n"
-          "👉 Tap the link to view their profile and connect:\n"
-          "$webUrl\n\n"
-          "💼 Find your next opportunity with Job Zinda!\n\n"
-          "📱 Get the app:\n"
-          "Android: $playStoreUrl\n"
-          "iOS: $appStoreUrl";
-      
-      await Share.share(fallbackShareText, subject: 'Check out this profile on Job Zinda!');
-    }
-  
+  }
+  //
+  // Future<void> _shareUserProfile(BuildContext context, String userId, String userName) async {
+  //   // [REMOVED] Create an instance of FirebaseDynamicLinkService
+  //   // [REMOVED] final FirebaseDynamicLinkService dynamicLinkService = FirebaseDynamicLinkService();
+  //   // Show loading indicator
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     const SnackBar(content: Text('Generating shareable link...'))
+  //   );
+  //
+  //   // try {
+  //     // Generate a Firebase Dynamic Link
+  //     // [REMOVED] final String dynamicLink = await dynamicLinkService.createProfileDynamicLink(userId);
+  //
+  //     // Log the dynamic link for debugging
+  //     // print('Sharing profile with Firebase Dynamic Link: $dynamicLink');
+  //
+  //     // Create a shareable message with user information and the dynamic link
+  //
+  //     // Fallback to regular sharing if dynamic link fails
+  //     final String webUrl = 'https://jobzinda.com/profile/$userId';
+  //     const String playStoreUrl = 'https://play.google.com/store/apps/details?id=com.jobZinda.customers';
+  //     const String appStoreUrl = 'https://apps.apple.com/app/job-zinda/id123456789';
+  //
+  //     final String fallbackShareText = "🔍 Discover $userName on Job Zinda!\n\n"
+  //         "👉 Tap the link to view their profile and connect:\n"
+  //         "$webUrl\n\n"
+  //         "💼 Find your next opportunity with Job Zinda!\n\n"
+  //         "📱 Get the app:\n"
+  //         "Android: $playStoreUrl\n"
+  //         "iOS: $appStoreUrl";
+  //
+  //     await Share.share(fallbackShareText, subject: 'Check out this profile on Job Zinda!');
+  //   }
+
+  //
 
   @override
   Widget build(BuildContext context) {

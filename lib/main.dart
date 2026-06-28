@@ -1,4 +1,5 @@
 import 'package:biz_zinda/view/Create_My_Offer/OfferSectionWidget.dart';
+import 'package:biz_zinda/view/Create_My_Offer/offer_details_screen.dart';
 import 'package:biz_zinda/view/Shop/create_shope_page.dart';
 import 'package:biz_zinda/view/shop/shop_dashboard_page.dart' show ShopDashboardScreen;
 import 'package:firebase_core/firebase_core.dart';
@@ -86,7 +87,6 @@ import 'store_subscription/subscription_screen.dart';
 
 
 
-
 // Must be a top-level function (e.g. not a class method)
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -117,7 +117,7 @@ Future<void> main() async {
     // Initialize other services
     await FCMService().initialize();
     debugPrint('HB-INIT | FCM service initialized');
-    unawaited(AppLinkService().init());
+    await AppLinkService().init();
     debugPrint('HB-INIT | AppLinkService initialized');
 
     // Configure loading indicator
@@ -181,6 +181,9 @@ final GoRouter mainAppRouter = GoRouter(
   initialLocation: PPages.splash, // Set initial location
   redirect: (BuildContext context, GoRouterState state) {
     // Use the AppLinkService to check if the app has finished initializing.
+    debugPrint(
+      "REDIRECT => ${state.matchedLocation} | init=${AppLinkService().isInitializationComplete}",
+    );
     final appLinkService = AppLinkService();
     if (!appLinkService.isInitializationComplete) {
       // While the app is initializing, allow navigation only to the splash screen.
@@ -260,32 +263,7 @@ final GoRouter mainAppRouter = GoRouter(
                     return ProfileScreen();
                   }
                 },
-                // builder: (context, state) {
-                //   final profileVM = context.watch<ProfileViewModel>();
-                //   final profile = profileVM.profileModel;
-                //
-                //   /// ⏳ loading
-                //   if (profile == null) {
-                //     return const Scaffold(
-                //       body: Center(child: CircularProgressIndicator()),
-                //     );
-                //   }
-                //
-                //   final profileType = profile.accountType?.toLowerCase();
-                //
-                //   /// 🏪 SHOP OWNER → DASHBOARD
-                //   if (profile.isShopOwner == true) {
-                //     return const ShopDashboardScreen();
-                //   }
-                //
-                //   /// 👤 NORMAL USER → PLAN UI
-                //   if (profileType == "normal") {
-                //     return PlanUi();
-                //   }
-                //
-                //   /// ⭐ OTHER USERS → PROFILE
-                //   return ProfileScreen();
-                // },
+
                 routes: [
                   GoRoute(
                     path: ':userId',
@@ -463,12 +441,37 @@ final GoRouter mainAppRouter = GoRouter(
       name: '/createShop',
       builder: (context, state) => const CreateShopPage(),
     ),
+    // GoRoute(
+    //   path: '/offering/:id',
+    //   name: 'offering',
+    //   builder: (context, state) {
+    //     final id = state.pathParameters['id']!;
+    //     return OfferSection(id: id);
+    //   },
+    // ),
+
     GoRoute(
       path: '/offering/:id',
       name: 'offering',
       builder: (context, state) {
         final id = state.pathParameters['id']!;
-        return OfferSection(id: id);
+
+        debugPrint("ROUTE HIT => $id");
+
+        return OfferDetailScreen(
+          offerId: id,
+        );
+      },
+    ),
+    GoRoute(
+      path: '/profile/:userId',
+      name: 'otherUserProfile',
+      builder: (context, state) {
+        final userId = state.pathParameters['userId'] ?? '';
+
+        return OtherUserProfileScreen(
+          userId: userId,
+        );
       },
     ),
 

@@ -10,6 +10,7 @@ class AppLinkService {
   static final AppLinkService _instance = AppLinkService._internal();
   factory AppLinkService() => _instance;
   AppLinkService._internal();
+  String? pendingDeepLink;
 
   final _appLinks = AppLinks();
   StreamSubscription<Uri>? _linkSubscription;

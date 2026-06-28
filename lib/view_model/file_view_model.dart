@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import '../utils/api_service.dart';
 import '../utils/api_url.dart';
+import 'package:biz_zinda/model/logged_in_user.dart';
 
 class FileUploadViewModel with ChangeNotifier {
   final Dio _dio = Dio();
@@ -16,6 +17,14 @@ class FileUploadViewModel with ChangeNotifier {
   String _folderFor(String fieldName, {String? type}) {
     final f = fieldName.toLowerCase();
     if (f.contains('thumbnail')) return 'posts/thumbnails';
+    // shabna
+
+    if (f == 'offer') {
+      if ((type ?? '').toLowerCase() == 'video') {
+        return 'offers/videos';
+      }
+      return 'offers/images';
+    }
     if (f == 'post') {
       if ((type ?? '').toLowerCase() == 'video') return 'posts/videos';
       return 'posts/images';
@@ -29,34 +38,91 @@ class FileUploadViewModel with ChangeNotifier {
     if (f.contains('audio')) return 'audio';
     return 'media';
   }
-
-  Future<String?> _uploadBytes(Uint8List bytes, String filename, String folder) async {
+  Future<String?> _uploadBytes(
+      Uint8List bytes,
+      String filename,
+      String folder,
+      ) async {
     try {
-      final headers = await Api.getAuthorizationHeader();
+
+      final headers =
+      await LoggedInUser.getAuthorizationHeader();
+
       final formData = FormData.fromMap({
         'folder': folder,
-        'file': MultipartFile.fromBytes(bytes, filename: filename),
+        'file': MultipartFile.fromBytes(
+          bytes,
+          filename: filename,
+        ),
       });
-      final resp = await _dio.post(
-        '${AppUrl.baseurl}/api/v1/upload/single',
+
+      print("UPLOAD FOLDER: $folder");
+      print("UPLOAD FILE: $filename");
+
+      final resp = await Dio().post(
+        "${Api.baseurl}/api/v1/upload/single",
         data: formData,
-        options: Options(headers: {
-          ...headers,
-          'Content-Type': 'multipart/form-data',
-        }),
+        options: Options(
+          headers: {
+            ...headers,
+            "verifyPlatform": "bizzinda",
+            "Content-Type": "multipart/form-data",
+          },
+        ),
       );
-      if ((resp.statusCode == 200 || resp.statusCode == 201) && resp.data is Map) {
-        final data = resp.data as Map;
-        if (data['status'] == true) {
-          return data['data']?['url'] as String?;
-        }
+
+      print("UPLOAD RESPONSE: ${resp.data}");
+
+      if ((resp.statusCode == 200 ||
+          resp.statusCode == 201) &&
+          resp.data['status'] == true) {
+
+        return resp.data['data']['url'];
       }
+
       return null;
+
+    } on DioException catch (e) {
+
+      print("UPLOAD STATUS: ${e.response?.statusCode}");
+      print("UPLOAD DATA: ${e.response?.data}");
+
+      return null;
+
     } catch (e) {
-      print('Upload error: $e');
+
+      print("UPLOAD ERROR: $e");
       return null;
     }
   }
+
+  // Future<String?> _uploadBytes(Uint8List bytes, String filename, String folder) async {
+  //   try {
+  //     final headers = await Api.getAuthorizationHeader();
+  //     final formData = FormData.fromMap({
+  //       'folder': folder,
+  //       'file': MultipartFile.fromBytes(bytes, filename: filename),
+  //     });
+  //     final resp = await _dio.post(
+  //       '${AppUrl.baseurl}/api/v1/upload/single',
+  //       data: formData,
+  //       options: Options(headers: {
+  //         ...headers,
+  //         'Content-Type': 'multipart/form-data',
+  //       }),
+  //     );
+  //     if ((resp.statusCode == 200 || resp.statusCode == 201) && resp.data is Map) {
+  //       final data = resp.data as Map;
+  //       if (data['status'] == true) {
+  //         return data['data']?['url'] as String?;
+  //       }
+  //     }
+  //     return null;
+  //   } catch (e) {
+  //     print('Upload error: $e');
+  //     return null;
+  //   }
+  // }
 
   // Deprecated: signed-URL based flow removed
 

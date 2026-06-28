@@ -135,21 +135,43 @@ Future<void> getImage(ImageSource source) async {
     if (image != null) {
       // Show loading while processing
       EasyLoading.show(status: 'Uploading image...');
-      
-      // Upload the image to your backend or storage
+
       String? url = await context
           .read<FileUploadViewModel>()
           .pickedImageUpload(image, 'Post');
+      print("UPLOAD URL : $url");
 
-      // Update UI with selected image URL
+      if (url == null || url.isEmpty) {
+        EasyLoading.dismiss();
+        EasyLoading.showError("Image upload failed");
+        return;
+      }
+
       OfferViewModel offerProvider = context.read<OfferViewModel>();
 
       offerProvider.selectedMediaType = 'image';
       offerProvider.selectedUrl = url;
+
       offerProvider.notifyListeners();
 
-      // Dismiss loading
+      print("IMAGE URL: ${offerProvider.selectedUrl}");
+
       EasyLoading.dismiss();
+      
+      // // // Upload the image to your backend or storage
+      // // String? url = await context
+      // //     .read<FileUploadViewModel>()
+      // //     .pickedImageUpload(image, 'Post');
+      //
+      // // Update UI with selected image URL
+      // OfferViewModel offerProvider = context.read<OfferViewModel>();
+      //
+      // offerProvider.selectedMediaType = 'image';
+      // offerProvider.selectedUrl = url;
+      // offerProvider.notifyListeners();
+      //
+      // // Dismiss loading
+      // EasyLoading.dismiss();
     }
   } catch (e) {
     EasyLoading.dismiss();

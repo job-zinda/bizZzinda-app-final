@@ -9,6 +9,7 @@ import 'package:badges/badges.dart' as badges;
 import 'package:biz_zinda/view_model/chat_badge_viewmodel.dart';
 import 'package:biz_zinda/view_model/chat_view_model.dart';
 import 'package:provider/provider.dart';
+import 'package:biz_zinda/view/chat_bizzinda/chat_list_screen.dart';
 
 class HomeAppbar extends StatelessWidget {
   final GlobalKey<ScaffoldState> scaffoldKey;
@@ -71,12 +72,25 @@ class HomeAppbar extends StatelessWidget {
         Consumer<BadgeViewModel>(
           builder: (context, chatBadge, child) => GestureDetector(
             onTap: () {
-              // context.read<BadgeViewModel>().clearMessageBadge();
               context.read<ChatViewModel>().fetchAllConversations();
-              context.read<ChatViewModel>().updateView(ChatViewStatus.primary);
 
-              context.pushNamed(PPages.chatPageUi);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ChatListScreen(
+                    // conversationId: conversationId,
+                    // shopName: offer.userName ?? "Shop",
+                  ),
+                ),
+              );
             },
+            // onTap: () {
+            //   // context.read<BadgeViewModel>().clearMessageBadge();
+            //   context.read<ChatViewModel>().fetchAllConversations();
+            //   context.read<ChatViewModel>().updateView(ChatViewStatus.primary);
+            //
+            //   context.pushNamed(PPages.chatPageUi);
+            // },
             child: chatBadge.userMessageCount > 0
                 ? badges.Badge(
                     badgeStyle:

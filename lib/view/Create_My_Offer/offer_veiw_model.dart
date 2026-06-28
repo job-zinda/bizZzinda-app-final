@@ -109,7 +109,7 @@ class OfferViewModel with ChangeNotifier {
       if (response.data['status'] == true) {
         EasyLoading.showSuccess("Offer Created");
 
-        /// RESET
+
         selectedUrl = null;
         selectedMediaType = null;
         selectedThumbnailUrl = null;
@@ -117,7 +117,6 @@ class OfferViewModel with ChangeNotifier {
 
         notifyListeners();
 
-        /// REFRESH
         _offerController.refresh();
 
         await Future.delayed(const Duration(milliseconds: 500));

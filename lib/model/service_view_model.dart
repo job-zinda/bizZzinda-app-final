@@ -9,9 +9,11 @@ import 'package:provider/provider.dart';
 import '../utils/api_service.dart';
 import '../utils/api_url.dart';
 import '../model/service_model.dart';
+import 'logged_in_user.dart';
 
 
 class ServiceViewModel with ChangeNotifier {
+  final Dio dio = Dio();
   List<ServiceModel> services = [];
   List<ServiceModel> otherUserServices = [];
 
@@ -117,7 +119,7 @@ class ServiceViewModel with ChangeNotifier {
       final body = {
         "title": title,
         "image": imageUrl,
-        "price": price, // ✅ FIXED
+        "price": price,
         "duration": duration,
       };
 
@@ -230,36 +232,50 @@ class ServiceViewModel with ChangeNotifier {
       debugPrint("Error fetching services: $e");
     }
   }
-  Future<void> fetchOtherUserServices(
-      String userId,
-      ) async {
+  /// ================= FETCH OTHER USER SERVICES =================
+
+  Future<void> fetchOtherUserServices(String profileId) async {
 
     try {
 
-      final api = ApiService();
+      print("FETCHING SERVICES...");
 
-      final response = await api.get(
-        "${Api.listMyServices}/$userId",
+      final headers =
+      await LoggedInUser.getAuthorizationHeader();
+
+      final response = await Dio().get(
+        Api.otherUserServices(profileId),
+
+        options: Options(
+          headers: {
+            ...headers,
+            "verifyPlatform": "bizzinda",
+          },
+        ),
       );
 
+      print("SERVICE RESPONSE => ${response.data}");
+
       if (response.statusCode == 200 &&
-          response.data['status'] == true) {
+          response.data["status"] == true) {
 
-        final List list =
-            response.data['data']['services'] ?? [];
+        final List data =
+            response.data["data"]["services"] ?? [];
 
-        otherUserServices = list
+        otherUserServices = data
             .map((e) => ServiceModel.fromJson(e))
             .toList();
 
         notifyListeners();
+
+      } else {
+
+        print("SERVICE FETCH FAILED");
       }
 
     } catch (e) {
 
-      debugPrint(
-        "Error fetching other user services: $e",
-      );
+      print("SERVICE ERROR => $e");
     }
   }
 

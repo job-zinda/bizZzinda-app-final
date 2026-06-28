@@ -18,7 +18,8 @@ import 'package:biz_zinda/model/product_model.dart';
 import 'package:biz_zinda/model/service_model.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+
+  const ProfileScreen({super.key,});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();

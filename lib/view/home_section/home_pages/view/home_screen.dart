@@ -95,7 +95,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-        _postViewModel.removeListener(_onPostsUpdated);
+    _postViewModel?.removeListener(_onPostsUpdated);
+        // _postViewModel.removeListener(_onPostsUpdated);
     _scrollController.removeListener(_scrollListener);
     _scrollController.dispose();
     super.dispose();
@@ -222,18 +223,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     Navigator.pop(context);
                     context.push(PPages.wallet);
                   }),
-              drawerWidget(
-                title: "Orders",
-                icon: SvgPicture.asset(
-                  PSvgs.referals,
-                  color: primaryColor,
-                ),
-                fun: () {
-                  context.read<ReferalViewModel>().fetchReferlaList(context);
-                  Navigator.pop(context);
-                  context.pushNamed(PPages.referalPageUi);
-                },
-              ),
+              // drawerWidget(
+              //   title: "Orders",
+              //   icon: SvgPicture.asset(
+              //     PSvgs.referals,
+              //     color: primaryColor,
+              //   ),
+              //   fun: () {
+              //     context.read<ReferalViewModel>().fetchReferlaList(context);
+              //     Navigator.pop(context);
+              //     context.pushNamed(PPages.referalPageUi);
+              //   },
+              // ),
               // context.read<ProfileViewModel>().profileModel == null
               //     ? Container()
               //     : context
@@ -431,34 +432,42 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         );
                       },
                     )
-                        : HomeVideoBanner(),
+                        // : HomeVideoBanner(),
+                        : ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.asset(
+                        'assets/images/homebanner2.jpeg',
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                      ),
+                    ),
                   ),
                 ),
 
-                Consumer<ProfileViewModel>(
-                  builder: (context, profileVm, child) {
-                    final profile = profileVm.profileModel;
+                // Consumer<ProfileViewModel>(
+                //   builder: (context, profileVm, child) {
+                //     final profile = profileVm.profileModel;
+                //
+                //     // shop illa enkil mathram kaanikku
+                //     if (profile == null || profile.accountType == "shop") {
+                //       return SizedBox();
+                //     }
+                //
+                //     // return Padding(
+                //     //   padding: const EdgeInsets.symmetric(vertical: 10),
+                //     //   child: CustomElavatedTextButton(
+                //     //     text: "Create Store",
+                //     //     bgcolor: Color(0xFFFB8C00),
+                //     //     borderRadius: 12,
+                //     //     onPressed: () {
+                //     //       context.pushNamed(PPages.subscriptionScreen);
+                //     //     },
+                //     //   ),
+                //     // );
+                //   },
+                // ),
 
-                    // shop illa enkil mathram kaanikku
-                    if (profile == null || profile.accountType == "shop") {
-                      return SizedBox();
-                    }
-
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      child: CustomElavatedTextButton(
-                        text: "Create Store",
-                        bgcolor: Color(0xFFFB8C00),
-                        borderRadius: 12,
-                        onPressed: () {
-                          context.pushNamed(PPages.subscriptionScreen);
-                        },
-                      ),
-                    );
-                  },
-                ),
-
-                OfferSection(id: "some_id"),
+                 OfferSection(id: "some_id"),
                    // OfferSection(),
                  // const PostSection(),
 

@@ -44,6 +44,7 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
   }
   Future<bool> _fetchProfileDetails() async {
 
+    /// ✅ CHECK USER ID
     if (widget.userId == null ||
         widget.userId!.isEmpty) {
 
@@ -54,6 +55,7 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
       'OtherUserProfileScreen: Loading profile for userId: ${widget.userId}',
     );
 
+    /// ✅ VIEW MODELS
     final postViewModel =
     Provider.of<PostViewModel>(
       context,
@@ -72,29 +74,75 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
       listen: false,
     );
 
-    final profileLoaded =
-    await postViewModel
-        .fetchOtherUserProfileDetails(
-      userID: widget.userId!,
-    );
+    try {
 
-    if (profileLoaded) {
+      /// ✅ FETCH PROFILE DETAILS
+      final profileLoaded =
+      await postViewModel
+          .fetchOtherUserProfileDetails(
+        userID: widget.userId!,
+      );
 
+      /// ❌ PROFILE FAILED
+      if (!profileLoaded ||
+          postViewModel.otherUser == null) {
+
+        debugPrint(
+          "PROFILE LOAD FAILED",
+        );
+
+        return false;
+      }
+
+      /// ✅ DEBUG PROFILE
+      print(
+        "OTHER USER ID => ${postViewModel.otherUser!.sId}",
+      );
+
+      /// ✅ IMPORTANT
+      /// USE PROFILE ID
+      final String profileId =
+          postViewModel.otherUser!.sId ?? "";
+
+      print(
+        "PROFILE ID => $profileId",
+      );
+
+      /// ❌ EMPTY PROFILE ID
+      if (profileId.isEmpty) {
+
+        debugPrint(
+          "PROFILE ID EMPTY",
+        );
+
+        return false;
+      }
+
+      /// ✅ FETCH PRODUCTS + SERVICES
       await Future.wait([
 
         productViewModel
             .fetchOtherUserProducts(
-          widget.userId!,
+          profileId,
         ),
 
         serviceViewModel
             .fetchOtherUserServices(
-          widget.userId!,
+          profileId,
         ),
       ]);
-    }
 
-    return profileLoaded;
+      /// ✅ SUCCESS
+      return true;
+
+    } catch (e) {
+
+      debugPrint(
+        "FETCH PROFILE ERROR => $e",
+      );
+
+      return false;
+    }
   }
 
   // Future<bool> _fetchProfileDetails() {

@@ -51,15 +51,16 @@ class OfferingModel {
   final String? mediaType;
   final String? city;
   final String? state;
+
   int? likesCount;
-   int? shareCount;
+  int? shareCount;
   bool? isLiked;
 
-  final String? userProfile;
-  final String? userName;
+  final String userId;        // ✅ FIX
+  final String userName;      // ✅ FIX
+  final String userProfile;
+
   final String? createdAt;
-  final String? userId;
-  final String? shopId;
 
   OfferingModel({
     required this.id,
@@ -71,14 +72,27 @@ class OfferingModel {
     this.likesCount,
     this.shareCount,
     this.isLiked,
-    this.userProfile,
-    this.userName,
+    required this.userId,
+    required this.userName,
+    required this.userProfile,
     this.createdAt,
-    this.userId,
-    this.shopId,
   });
-
   factory OfferingModel.fromJson(Map<String, dynamic> json) {
+    final dynamic userData = json["user"];
+
+    String userId = "";
+    String userName = json["name"]?.toString() ?? "";
+    String userProfile = json["profileImage"]?.toString() ?? "";
+
+    if (userData is Map<String, dynamic>) {
+      userId = userData["_id"]?.toString() ?? "";
+      userName = userData["userName"]?.toString() ?? userName;
+      userProfile =
+          userData["userProfilePicture"]?.toString() ?? userProfile;
+    } else {
+      userId = userData?.toString() ?? "";
+    }
+
     return OfferingModel(
       id: json['_id']?.toString() ?? '',
       bio: json['bio']?.toString(),
@@ -86,22 +100,52 @@ class OfferingModel {
       mediaType: json['mediaType']?.toString(),
       city: json['city']?.toString(),
       state: json['state']?.toString(),
-
-      likesCount: (json['likesCount'] is int)
-          ? json['likesCount']
-          : int.tryParse(json['likesCount']?.toString() ?? '0') ?? 0,
-
-      shareCount: (json['shareCount'] is int)
-          ? json['shareCount']
-          : int.tryParse(json['shareCount']?.toString() ?? '0') ?? 0,
-
+      likesCount: int.tryParse(json['likesCount']?.toString() ?? '0') ?? 0,
+      shareCount: int.tryParse(json['shareCount']?.toString() ?? '0') ?? 0,
       isLiked: json['isLiked'] == true,
-
-      userProfile: json['profileImage']?.toString(),
-      userName: json['name']?.toString(),
+      userId: userId,
+      userName: userName,
+      userProfile: userProfile,
       createdAt: json['createdAt']?.toString(),
-      userId: json['user']?.toString(),
-      shopId: json['shopId']?.toString(),
+    );
+  }
+  // factory OfferingModel.fromJson(Map<String, dynamic> json) {
+  //   return OfferingModel(
+  //     id: json['_id']?.toString() ?? '',
+  //     bio: json['bio']?.toString(),
+  //     mediaUrl: json['mediaUrl']?.toString(),
+  //     mediaType: json['mediaType']?.toString(),
+  //     city: json['city']?.toString(),
+  //     state: json['state']?.toString(),
+  //
+  //     likesCount: int.tryParse(json['likesCount']?.toString() ?? '0') ?? 0,
+  //     shareCount: int.tryParse(json['shareCount']?.toString() ?? '0') ?? 0,
+  //     isLiked: json['isLiked'] == true,
+  //
+  //     userId: json["user"] ?? "",
+  //     userName: json["name"] ?? "",
+  //     userProfile: json["profileImage"] ?? "",
+  //
+  //     createdAt: json['createdAt']?.toString(),
+  //   );
+  // }
+}
+class OfferUser {
+  final String id;
+  final String userName;
+  final String userProfilePicture;
+
+  OfferUser({
+    required this.id,
+    required this.userName,
+    required this.userProfilePicture,
+  });
+
+  factory OfferUser.fromJson(Map<String, dynamic> json) {
+    return OfferUser(
+      id: json['_id']?.toString() ?? '',
+      userName: json['userName']?.toString() ?? '',
+      userProfilePicture: json['userProfilePicture']?.toString() ?? '',
     );
   }
 }

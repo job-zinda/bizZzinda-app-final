@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:biz_zinda/model/logged_in_user.dart';
 import 'package:biz_zinda/view_model/file_view_model.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,7 @@ import '../model/product_model.dart';
 
 
 class ProductViewModel with ChangeNotifier {
+  final Dio dio = Dio();
   /// 📦 PRODUCTS LIST
   List<ProductModel> products = [];
   List<ProductModel> otherUserProducts = [];
@@ -201,38 +203,6 @@ class ProductViewModel with ChangeNotifier {
       notifyListeners();
     }
   }
-  Future<void> fetchOtherUserProducts(
-      String userId,
-      ) async {
-
-    try {
-
-      final api = ApiService();
-
-      final response = await api.get(
-        "${Api.listMyProducts}/$userId",
-      );
-
-      if (response.statusCode == 200 &&
-          response.data['status'] == true) {
-
-        final List list =
-            response.data['data']['products'] ?? [];
-
-        otherUserProducts = list
-            .map((e) => ProductModel.fromJson(e))
-            .toList();
-
-        notifyListeners();
-      }
-
-    } catch (e) {
-
-      debugPrint(
-        "Error fetching other user products: $e",
-      );
-    }
-  }
 
   /// =========================
   /// 🔼 IMAGE UPLOAD HELPER
@@ -244,5 +214,51 @@ class ProductViewModel with ChangeNotifier {
       xfile,
       "product",
     );
+  }
+  /// ================= FETCH OTHER USER PRODUCTS =================
+
+  Future<void> fetchOtherUserProducts(String profileId) async {
+
+    try {
+
+      print("FETCHING PRODUCTS...");
+
+      final headers =
+      await LoggedInUser.getAuthorizationHeader();
+
+      final response = await Dio().get(
+        Api.otherUserProducts(profileId),
+
+        options: Options(
+          headers: {
+            ...headers,
+            "verifyPlatform": "bizzinda",
+          },
+        ),
+      );
+
+      print("PRODUCT RESPONSE => ${response.data}");
+
+      if (response.statusCode == 200 &&
+          response.data["status"] == true) {
+
+        final List data =
+            response.data["data"]["products"] ?? [];
+
+        otherUserProducts = data
+            .map((e) => ProductModel.fromJson(e))
+            .toList();
+
+        notifyListeners();
+
+      } else {
+
+        print("PRODUCT FETCH FAILED");
+      }
+
+    } catch (e) {
+
+      print("PRODUCT ERROR => $e");
+    }
   }
 }

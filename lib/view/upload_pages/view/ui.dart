@@ -67,14 +67,14 @@ class UploadPagesUi extends StatelessWidget {
 
                 context.pushNamed(AddStoryScreen.route);
               },
-              leading: SvgPicture.asset(
-                PSvgs.share_story,
-                color:Color(0xFFFB8C00),
-              ),
-              title: textWidget(
-                text: 'Share My offer',
-                color:Color(0xFFFB8C00),
-              ),
+              // leading: SvgPicture.asset(
+              //   PSvgs.share_story,
+              //   color:Color(0xFFFB8C00),
+              // ),
+              // title: textWidget(
+              //   text: 'Share My offer',
+              //   color:Color(0xFFFB8C00),
+              // ),
             )
           ],
         ),
