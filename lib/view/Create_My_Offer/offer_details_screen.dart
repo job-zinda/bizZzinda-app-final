@@ -7,7 +7,11 @@ import 'package:biz_zinda/view/chat_bizzinda/chat_screen.dart';
 import 'package:biz_zinda/view/other_user_profile/view/other_user_profile_screen.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:biz_zinda/utils/contact_launcher.dart';
+import 'package:biz_zinda/utils/guest_helper.dart';
+import 'package:biz_zinda/view_model/post_view_model.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:provider/provider.dart';
 
 class OfferDetailScreen extends StatefulWidget {
   final String offerId;
@@ -218,13 +222,33 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
   Future<void> startChat() async {
     if (isChatLoading) return;
 
+    final userId = offer?.userId ?? "";
+
+    if (LoggedInUser.isGuest) {
+      String? wa = offer?.whatsappNumber ?? offer?.contactNumber;
+      if (wa == null || wa.trim().isEmpty) {
+        await context.read<PostViewModel>().fetchOtherUserProfileDetails(userID: userId);
+        final otherUser = context.read<PostViewModel>().otherUser;
+        wa = otherUser?.whatsappNumber ?? otherUser?.contactNumber;
+      }
+      if (wa != null && wa.trim().isNotEmpty) {
+        final String imgUrl = getMediaUrl();
+        final String msg = imgUrl.isNotEmpty
+            ? "HI i found your offer in Biz Zinda\n$imgUrl"
+            : "HI i found your offer in Biz Zinda";
+        launchWhatsAppChat(wa, null, message: msg);
+      } else {
+        isGuestUser(context);
+      }
+      return;
+    }
+
     setState(() => isChatLoading = true);
 
     try {
       debugPrint("CHAT USER ID => ${offer?.userId}");
       debugPrint("CHAT USER NAME => ${offer?.userName}");
       debugPrint("OFFER ID => ${widget.offerId}");
-      final userId = offer?.userId ?? "";
 
       if (userId.isEmpty) {
         EasyLoading.showError("User not found");

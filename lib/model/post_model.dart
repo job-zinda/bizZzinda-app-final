@@ -57,10 +57,12 @@ class PostModel {
     mediaUrl = json['mediaUrl'];
     thumbnail = json['thumbnail'];
 
-    duration = json['duration'];
-    likesCount = json['likesCount'];
-    commentsCount = json['commentsCount'];
-    shareCount = json['shareCount'];
+    // Coerce via num so a double (e.g. a video `duration` like 12.5 from the
+    // guest/public feed) doesn't throw "double is not a subtype of int?".
+    duration = (json['duration'] as num?)?.toInt();
+    likesCount = (json['likesCount'] as num?)?.toInt();
+    commentsCount = (json['commentsCount'] as num?)?.toInt();
+    shareCount = (json['shareCount'] as num?)?.toInt();
     user = json['user'] != null && json['user'] is Map
         ? User.fromJson(json['user'])
         : User();

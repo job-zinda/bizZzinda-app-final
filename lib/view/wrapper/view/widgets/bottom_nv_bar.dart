@@ -6,6 +6,9 @@ import 'package:biz_zinda/Settings/until/PSvgs.dart';
 import 'package:biz_zinda/view/upload_pages/view/ui.dart';
 import 'package:biz_zinda/view_model/connect_page_view_model.dart';
 import 'package:biz_zinda/view_model/profile_view_model.dart';
+import 'package:biz_zinda/utils/guest_helper.dart';
+import 'package:biz_zinda/model/logged_in_user.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 
 // class BottomNavBar extends StatelessWidget {
@@ -201,7 +204,10 @@ class BottomNavBar extends StatelessWidget {
 
           /// Upload Button
           GestureDetector(
-            onTap: () => _handleUpload(context),
+            onTap: () {
+              if (isGuestUser(context)) return;
+              _handleUpload(context);
+            },
             child: Container(
               height: 40,
               width: 40,
@@ -233,7 +239,10 @@ class BottomNavBar extends StatelessWidget {
           _item(
             icon: Icons.store,
             selected: navigationShell.currentIndex == 3,
-            onTap: () => _onTap(3),
+            onTap: () {
+              if (isGuestUser(context)) return;
+              _onTap(3);
+            },
           ),
         ],
       ),
@@ -279,6 +288,11 @@ class BottomNavBar extends StatelessWidget {
   void _handleConnection(BuildContext context) async {
     _onTap(2);
 
+    if (LoggedInUser.isGuest) {
+      await _useDeviceLocation(context);
+      return;
+    }
+
     final profileVM = context.read<ProfileViewModel>();
     await profileVM.fetchProfile();
 
@@ -291,6 +305,28 @@ class BottomNavBar extends StatelessWidget {
         profileVM.profileModel!.lat!,
         profileVM.profileModel!.lng!,
       );
+    }
+  }
+
+  Future<void> _useDeviceLocation(BuildContext context) async {
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        return;
+      }
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.medium,
+      );
+      if (!context.mounted) return;
+      context
+          .read<ConnectPageViewModel>()
+          .updateLocation(position.latitude, position.longitude);
+    } catch (e) {
+      debugPrint('[_useDeviceLocation] Error getting location: $e');
     }
   }
 

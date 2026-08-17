@@ -88,6 +88,34 @@ class _TaskCornerAssignmentsPageState extends State<TaskCornerAssignmentsPage> {
     } catch (_) {}
   }
 
+  String? _getTaskWhatsappLink(Map<String, dynamic> taskMap) {
+    final String? directLink = taskMap['whatsappLink']?.toString() ??
+        taskMap['whatsapp']?.toString() ??
+        taskMap['whatsappUrl']?.toString();
+
+    if (directLink != null && directLink.trim().isNotEmpty && directLink.startsWith('http')) {
+      return directLink.trim();
+    }
+
+    final String? rawNum = taskMap['whatsappNumber']?.toString() ??
+        taskMap['user']?['whatsappNumber']?.toString() ??
+        taskMap['offering']?['whatsappNumber']?.toString() ??
+        taskMap['contactNumber']?.toString() ??
+        taskMap['user']?['contactNumber']?.toString();
+
+    if (rawNum != null && rawNum.trim().isNotEmpty) {
+      String cleanNum = rawNum.replaceAll(RegExp(r'[^\d]'), '');
+      if (!cleanNum.startsWith('91') && cleanNum.length == 10) {
+        cleanNum = '91$cleanNum';
+      }
+      if (cleanNum.isNotEmpty) {
+        final encodedMsg = Uri.encodeComponent("HI i found your offer in Biz Zinda");
+        return "https://wa.me/$cleanNum?text=$encodedMsg";
+      }
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final joinButton = Padding(
@@ -210,6 +238,56 @@ class _TaskCornerAssignmentsPageState extends State<TaskCornerAssignmentsPage> {
                         ],
                       ),
                     ),
+                  Builder(
+                    builder: (ctx) {
+                      final waLink = _getTaskWhatsappLink(
+                        a['task'] is Map ? Map<String, dynamic>.from(a['task']) : {},
+                      );
+                      if (waLink == null || waLink.isEmpty) return const SizedBox.shrink();
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4.0),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              flex: 5,
+                              child: TextField(
+                                controller: TextEditingController(text: waLink),
+                                readOnly: true,
+                                enableInteractiveSelection: true,
+                                onTap: () async {
+                                  final uri = Uri.tryParse(waLink);
+                                  if (uri != null) {
+                                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                  }
+                                },
+                                style: const TextStyle(
+                                  color: Color(0xFF25D366),
+                                  decoration: TextDecoration.underline,
+                                ),
+                                decoration: const InputDecoration(
+                                  labelText: 'WhatsApp Link',
+                                  border: OutlineInputBorder(),
+                                  isDense: true,
+                                  contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              icon: const Icon(Icons.copy, size: 20, color: Color(0xFF25D366)),
+                              tooltip: 'Copy WhatsApp Link',
+                              onPressed: () async {
+                                await Clipboard.setData(ClipboardData(text: waLink));
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('WhatsApp link copied to clipboard')),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
                   if (a['task']?['commissionAmount'] != null &&
                       (a['task']['commissionAmount'] as num) > 0)
                     Padding(

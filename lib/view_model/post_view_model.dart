@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:biz_zinda/model/banners_model.dart';
+import 'package:biz_zinda/model/logged_in_user.dart';
 import 'package:biz_zinda/model/profile_model.dart';
 import 'package:biz_zinda/utils/api_url.dart';
 import '../model/post_model.dart';
@@ -59,49 +60,76 @@ class PostViewModel with ChangeNotifier {
   Future<void> fetchPostWithPagination(int page) async {
     if (currentPage != page) {
       currentPage = page;
-      String api =
-      isForYou ? Api.suggestedPostsListUrl : Api.followingsPostsListUrl;
+      String api = LoggedInUser.isGuest
+          ? Api.publicFeedUrl
+          : (isForYou ? Api.suggestedPostsListUrl : Api.followingsPostsListUrl);
 
-      Response response = await ApiService().get('$api&pageNumber=$page');
+      try {
+        Response response = await ApiService().get('$api&pageNumber=$page');
 
-      if (response.statusCode == 200) {
-        Map<String, dynamic> data = response.data;
-        if (data['status']) {
-          print("temp----$data");
+        if (response.statusCode == 200) {
+          Map<String, dynamic> data = response.data;
+          if (data['status'] == true) {
+            print("temp----$data");
 
-          // Parse posts
-          List<PostModel> posts = (data['data']['posts'] as List)
-              .map((e) => PostModel.fromJson(e))
-              .toList();
+            // Parse posts. The guest/public feed returns `offerings` with a
+            // slightly different shape, so guard each item: one malformed
+            // record must not fail the whole page and surface the generic
+            // "Something went wrong" error UI.
+            final List postsJson =
+                (data['data']?['posts'] ?? data['data']?['offerings'] ?? [])
+                    as List;
+            List<PostModel> posts = postsJson
+                .whereType<Map<String, dynamic>>()
+                .map((e) {
+                  try {
+                    return PostModel.fromJson(e);
+                  } catch (err) {
+                    debugPrint(
+                        '[fetchPostWithPagination] skipped malformed post: $err');
+                    return null;
+                  }
+                })
+                .whereType<PostModel>()
+                .toList();
 
+            // Fetch banners only on the first page to avoid unnecessary
+            // network calls on subsequent paginated requests. This
+            // significantly reduces payload size and improves initial
+            // rendering time on low-end devices or slow networks.
+            List<Banners> banners = [];
+            if (page == 1) {
+              try {
+                final bannerRes = await ApiService().get(LoggedInUser.isGuest
+                    ? Api.publicBannersUrl
+                    : Api.listBanners);
+                banners = (bannerRes.data['data']['banners'] as List?)
+                        ?.map((e) => Banners.fromJson(e))
+                        .toList() ??
+                    [];
+              } catch (e) {
+                debugPrint('[fetchPostWithPagination] Banner fetch failed: $e');
+              }
+            }
 
+            // Merge posts and banners (if any) based on indices
+            List<dynamic> combinedList = _mergePostsAndBanners(posts, banners);
 
-          // Fetch banners only on the first page to avoid unnecessary
-          // network calls on subsequent paginated requests. This
-          // significantly reduces payload size and improves initial
-          // rendering time on low-end devices or slow networks.
-          List<Banners> banners = [];
-          if (page == 1) {
-            final bannerRes = await ApiService().get(Api.listBanners);
-            banners = (bannerRes.data['data']['banners'] as List?)
-                ?.map((e) => Banners.fromJson(e))
-                .toList() ??
-                [];
-          }
-
-          // Merge posts and banners (if any) based on indices
-          List<dynamic> combinedList = _mergePostsAndBanners(posts, banners);
-
-          if (data['data']['hasNext']) {
-            postController.appendPage(combinedList, page + 1);
+            if (data['data']?['hasNext'] == true) {
+              postController.appendPage(combinedList, page + 1);
+            } else {
+              postController.appendLastPage(combinedList);
+            }
           } else {
-            postController.appendLastPage(combinedList);
+            postController.appendLastPage([]);
           }
         } else {
           postController.appendLastPage([]);
         }
-      } else {
-        postController.appendLastPage([]);
+      } catch (e) {
+        currentPage = page - 1;
+        debugPrint('[fetchPostWithPagination] isGuest=${LoggedInUser.isGuest} url=$api error: $e');
+        postController.error = e;
       }
     }
   }
@@ -396,7 +424,9 @@ class PostViewModel with ChangeNotifier {
     EasyLoading.show(status: 'Loading profile...');
     otherUserProfileError = null;
     try {
-      final String url = '${Api.otherUserProfileDetailsUrl}/$userID';
+      final String url = LoggedInUser.isGuest
+          ? Api.publicProfileUrl(userID)
+          : '${Api.otherUserProfileDetailsUrl}/$userID';
       print('[fetchOtherUserProfileDetails] Request URL: $url');
       Response response = await ApiService().get(url);
       print('[fetchOtherUserProfileDetails] HTTP ${response.statusCode}, response.data: ' + response.data.toString());
@@ -406,7 +436,9 @@ class PostViewModel with ChangeNotifier {
         if (data['status']) {
           otherUser = ProfileModel.fromJson(data['data']['profileDetails']);
           isFollowed = otherUser?.isFollowing ?? false;
-          visitProfile(userID: userID);
+          if (!LoggedInUser.isGuest) {
+            visitProfile(userID: userID);
+          }
           notifyListeners();
           return true;
         } else {
@@ -452,15 +484,18 @@ class PostViewModel with ChangeNotifier {
     try {
       if (currentPageOtherUserPost != page) {
         currentPageOtherUserPost = page;
-        String api = Api.otherUserPostsListUrl;
+        String api = LoggedInUser.isGuest
+            ? Api.publicProfilePostsUrl
+            : Api.otherUserPostsListUrl;
         Response response = await ApiService()
             .get('$api&pageNumber=$page&&profileId=${otherUser?.sId}');
         if (response.statusCode == 200) {
           Map<String, dynamic> data = response.data;
           if (data['status']) {
-            List<PostModel> temp = (data['data']['posts'] as List)
-                .map((e) => PostModel.fromJson(e))
-                .toList();
+            final List postsJson =
+                data['data']['posts'] ?? data['data']['offerings'] ?? [];
+            List<PostModel> temp =
+                postsJson.map((e) => PostModel.fromJson(e)).toList();
 
             if (data['data']['hasNext']) {
               otherUserPostController.appendPage(temp, page + 1);
@@ -563,7 +598,9 @@ class PostViewModel with ChangeNotifier {
   Future<List<ProfileModel>> getUsersForMap() async {
     EasyLoading.show(status: 'Loading users...');
     try {
-      String api = Api.getNearestProfiles;
+      String api = LoggedInUser.isGuest
+          ? Api.publicNearestProfilesUrl
+          : Api.getNearestProfiles;
       Response response = await ApiService().get(api);
       if (response.statusCode == 200) {
         Map<String, dynamic> data = response.data;

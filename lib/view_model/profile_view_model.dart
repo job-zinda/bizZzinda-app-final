@@ -23,7 +23,6 @@ import 'package:biz_zinda/view_model/post_view_model.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 
-import '../view/login_section/login_welcome_screen/view/ui.dart';
 import 'package:biz_zinda/model/product_model.dart';
 import 'package:biz_zinda/model/service_model.dart';
 import 'package:biz_zinda/Settings/until/PPages.dart';
@@ -42,6 +41,9 @@ class ProfileViewModel with ChangeNotifier {
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController skillController = TextEditingController();
 
+  final TextEditingController contactNumberController = TextEditingController();
+  final TextEditingController whatsappController = TextEditingController();
+
 
 
   List<String> skills = [];
@@ -59,6 +61,7 @@ class ProfileViewModel with ChangeNotifier {
   final int pageSize = 10;
   bool hasMoreData = true;
   Future<void> fetchProfile() async {
+    if (LoggedInUser.isGuest) return;
     EasyLoading.show(status: 'Loading Profile...');
     try {
       Response response = await ApiService().get(Api.profileDetailsUrl);
@@ -82,6 +85,8 @@ class ProfileViewModel with ChangeNotifier {
           selectedGender = profileModel!.gender ?? "";
           addressController.text = profileModel!.address ?? '';
           cityController.text = profileModel!.district ?? '';
+          contactNumberController.text = profileModel!.contactNumber ?? '';
+          whatsappController.text = profileModel!.whatsappNumber ?? '';
 
           // Immediately dismiss loading after profile data is parsed so UI is responsive.
           EasyLoading.dismiss();
@@ -211,7 +216,7 @@ class ProfileViewModel with ChangeNotifier {
 
           if (!context.mounted) return;
 
-          context.goNamed(PPages.profileScreen);
+          context.goNamed('profile');
 
           // Future.microtask(() {
           //   EasyLoading.showSuccess(data['message']);
@@ -281,6 +286,9 @@ class ProfileViewModel with ChangeNotifier {
   Future<void> updateFreelancerProfile({required BuildContext context}) async {
     EasyLoading.show(status: 'Updating Profile...');
     try {
+      final wa = whatsappController.text.trim();
+      final cn = contactNumberController.text.trim();
+
       Map body = {
         'name': nameController.text,
         'email': emailController.text,
@@ -295,6 +303,8 @@ class ProfileViewModel with ChangeNotifier {
         'state': stateController.text,
         'district': cityController.text,
         'skills': skills,
+        'contactNumber': cn.isEmpty ? null : cn,
+        'whatsappNumber': wa.isEmpty ? null : wa,
       };
       Response response = await ApiService().put(Api.updateProfile, body);
       if (response.statusCode == 200) {
@@ -382,29 +392,37 @@ class ProfileViewModel with ChangeNotifier {
     }
   }
   userLogout(BuildContext context) async {
-
-    /// 🔥 DEBUG TOKEN
     print("REFRESH TOKEN: ${LoggedInUser.refreshToken}");
 
     try {
       Map body = {"refreshToken": LoggedInUser.refreshToken};
-
       final response = await ApiService().post(Api.userLogout, body);
       print("logout----${response.data}");
     } catch (e) {
       print("Logout API error: $e");
     }
 
-    /// ✅ ALWAYS CLEAR
-    LoggedInUser.clearUserData();
+    // 1. Close the logout confirmation dialog first.
+    if (context.mounted && Navigator.canPop(context)) {
+      Navigator.pop(context);
+    }
 
-    /// ✅ FORCE NAVIGATION
-    Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-      MaterialPageRoute(
-        builder: (_) => LoginWelcomeScreenUi(),
-      ),
-          (route) => false,
-    );
+    // 2. Leave the shell BEFORE mutating any state. Clearing the profile and
+    //    calling notifyListeners() while still inside the StatefulShellRoute
+    //    rebuilds a shell branch route mid-navigation, which corrupts the
+    //    shell's element lifecycle on the next login (framework.dart's
+    //    "_lifecycleState == _ElementLifecycle.inactive" assertion). Navigating
+    //    away first means the branch is torn down before we touch its data.
+    final navContext = main_app.navigatorKey.currentContext;
+    if (navContext != null && navContext.mounted) {
+      navContext.go(PPages.loginWelcomeScreenUi);
+    }
+
+    // 3. Now clear auth + profile state. The shell is no longer the active
+    //    route, so this notifyListeners() can't rebuild a live shell branch.
+    LoggedInUser.clearUserData();
+    profileModel = null;
+    notifyListeners();
   }
 
   // userLogout(BuildContext context) async {
@@ -540,9 +558,12 @@ class ProfileViewModel with ChangeNotifier {
     if (currentPage != page) {
       currentPage = page;
 
+      String base =
+          LoggedInUser.isGuest ? Api.publicProfileRatingsUrl : Api.listAllFeedbacks;
       String url =
-          "${Api.listAllFeedbacks}?profileId=$userID&pageNumber=$currentPage&pageSize=$pageSize";
+          "$base?profileId=$userID&pageNumber=$currentPage&pageSize=$pageSize";
 
+      try {
       Response response = await ApiService().get(url);
 
       if (response.statusCode == 200) {
@@ -560,6 +581,11 @@ class ProfileViewModel with ChangeNotifier {
           feedbackController.appendLastPage([]);
         }
       } else {
+        feedbackController.appendLastPage([]);
+      }
+      } catch (e) {
+        currentPage = page - 1;
+        debugPrint('[fetchFeedbackPagination] isGuest=${LoggedInUser.isGuest} url=$url error: $e');
         feedbackController.appendLastPage([]);
       }
     }

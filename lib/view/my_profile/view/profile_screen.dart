@@ -9,6 +9,7 @@ import 'package:biz_zinda/view/my_profile/view/widgets/profile_head_ui.dart';
 import 'package:biz_zinda/view/plan_ui/ui.dart';
 import 'package:biz_zinda/Settings/until/PPages.dart';
 import 'package:go_router/go_router.dart';
+import 'package:biz_zinda/utils/profile_share_helper.dart';
 import 'package:biz_zinda/view_model/profile_view_model.dart';
 import 'package:biz_zinda/view_model/subscription_view_model.dart';
 import 'package:provider/provider.dart';
@@ -66,6 +67,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 context.push(PPages.planListUi);
               } else if (value == 'courses') {
                 context.push(PPages.coursePurchaseUi);
+              } else if (value == 'share') {
+                final userId = profileViewModel.profileModel?.sId ?? '';
+
+                if (userId.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Unable to share your profile')),
+                  );
+                  return;
+                }
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Generating shareable link...')),
+                );
+
+                shareProfile(
+                  userId: userId,
+                  userName: profileViewModel.profileModel?.name,
+                  profileImageUrl: profileViewModel.profileModel?.profileImageUrl,
+                );
               }
             },
             itemBuilder: (context) => [
@@ -76,6 +96,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const PopupMenuItem<String>(
                 value: 'courses',
                 child: Text('Courses',style: TextStyle(color: Color(0xFFFB8C00),)),
+              ),
+              const PopupMenuItem<String>(
+                value: 'share',
+                child: Text('Share Profile',style: TextStyle(color: Color(0xFFFB8C00),)),
               ),
             ],
           ),

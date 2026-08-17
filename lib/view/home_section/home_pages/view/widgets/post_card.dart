@@ -11,6 +11,7 @@ import 'package:biz_zinda/model/logged_in_user.dart';
 import 'package:biz_zinda/model/post_model.dart';
 import 'package:biz_zinda/view/comment_pages/ui.dart';
 import 'package:biz_zinda/view_model/comment_view_model.dart';
+import 'package:biz_zinda/utils/guest_helper.dart';
 import 'package:provider/provider.dart';
 import 'package:readmore/readmore.dart';
 
@@ -181,6 +182,7 @@ class _PostCardState extends State<PostCard> {
           children: [
             IconButton(
               onPressed: () {
+                if (isGuestUser(context)) return;
                 context.read<PostViewModel>().postLike(postID: post?.sId ?? '');
                 setState(() {
                   if (isLiked) {
@@ -204,6 +206,7 @@ class _PostCardState extends State<PostCard> {
             ),
             IconButton(
               onPressed: () {
+                if (isGuestUser(context)) return;
                 // CommentViewModel commentViewModel =
                 //     context.read<CommentViewModel>();
                 // commentViewModel.currentPage = 0;

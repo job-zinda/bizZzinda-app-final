@@ -45,7 +45,7 @@ class LoginSplashUi extends StatelessWidget {
               borderRadius: 0,
               text: "Great",
               onPressed: () {
-                context.pushNamed(PPages.loginSplash2Ui);
+                context.goNamed(PPages.loginSplash2Ui);
               },
               bgcolor: PColors.white,
               textColor:Color(0xFFFB8C00),

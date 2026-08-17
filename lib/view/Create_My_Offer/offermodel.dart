@@ -61,6 +61,8 @@ class OfferingModel {
   final String userProfile;
 
   final String? createdAt;
+  final String? contactNumber;
+  final String? whatsappNumber;
 
   OfferingModel({
     required this.id,
@@ -76,6 +78,8 @@ class OfferingModel {
     required this.userName,
     required this.userProfile,
     this.createdAt,
+    this.contactNumber,
+    this.whatsappNumber,
   });
   factory OfferingModel.fromJson(Map<String, dynamic> json) {
     final dynamic userData = json["user"];
@@ -83,14 +87,20 @@ class OfferingModel {
     String userId = "";
     String userName = json["name"]?.toString() ?? "";
     String userProfile = json["profileImage"]?.toString() ?? "";
+    String? contactNumber;
+    String? whatsappNumber;
 
     if (userData is Map<String, dynamic>) {
       userId = userData["_id"]?.toString() ?? "";
       userName = userData["userName"]?.toString() ?? userName;
       userProfile =
           userData["userProfilePicture"]?.toString() ?? userProfile;
+      contactNumber = userData["contactNumber"]?.toString() ?? json["contactNumber"]?.toString();
+      whatsappNumber = userData["whatsappNumber"]?.toString() ?? json["whatsappNumber"]?.toString();
     } else {
       userId = userData?.toString() ?? "";
+      contactNumber = json["contactNumber"]?.toString();
+      whatsappNumber = json["whatsappNumber"]?.toString();
     }
 
     return OfferingModel(
@@ -107,6 +117,8 @@ class OfferingModel {
       userName: userName,
       userProfile: userProfile,
       createdAt: json['createdAt']?.toString(),
+      contactNumber: contactNumber,
+      whatsappNumber: whatsappNumber,
     );
   }
   // factory OfferingModel.fromJson(Map<String, dynamic> json) {

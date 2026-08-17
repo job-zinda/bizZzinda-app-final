@@ -10,6 +10,7 @@ import 'package:biz_zinda/view_model/chat_badge_viewmodel.dart';
 import 'package:biz_zinda/view_model/chat_view_model.dart';
 import 'package:provider/provider.dart';
 import 'package:biz_zinda/view/chat_bizzinda/chat_list_screen.dart';
+import 'package:biz_zinda/utils/guest_helper.dart';
 
 class HomeAppbar extends StatelessWidget {
   final GlobalKey<ScaffoldState> scaffoldKey;
@@ -47,6 +48,7 @@ class HomeAppbar extends StatelessWidget {
         Consumer<BadgeViewModel>(
           builder: (context, chatBadge, child) => GestureDetector(
             onTap: () {
+              if (isGuestUser(context)) return;
               // context.read<BadgeViewModel>().clearLetsPlanBadge();
               context.read<ChatViewModel>().fetchAllConversations();
 
@@ -72,6 +74,7 @@ class HomeAppbar extends StatelessWidget {
         Consumer<BadgeViewModel>(
           builder: (context, chatBadge, child) => GestureDetector(
             onTap: () {
+              if (isGuestUser(context)) return;
               context.read<ChatViewModel>().fetchAllConversations();
 
               Navigator.push(
@@ -108,6 +111,7 @@ class HomeAppbar extends StatelessWidget {
         Consumer<BadgeViewModel>(
           builder: (context, chatBadge, child) => GestureDetector(
             onTap: () {
+              if (isGuestUser(context)) return;
               context.read<BadgeViewModel>().notificationRead();
               context.pushNamed(PPages.notificationsUi);
             },

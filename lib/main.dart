@@ -1,7 +1,5 @@
-import 'package:biz_zinda/view/Create_My_Offer/OfferSectionWidget.dart';
 import 'package:biz_zinda/view/Create_My_Offer/offer_details_screen.dart';
 import 'package:biz_zinda/view/Shop/create_shope_page.dart';
-import 'package:biz_zinda/view/shop/shop_dashboard_page.dart' show ShopDashboardScreen;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -9,19 +7,11 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'dart:async';
 import 'package:biz_zinda/Settings/until/PColors.dart';
 import 'package:biz_zinda/Settings/until/PPages.dart';
-import 'package:biz_zinda/Settings/until/PRoutes.dart';
 import 'package:biz_zinda/Settings/until/PText_styles.dart';
 import 'package:biz_zinda/firebase_options.dart';
 import 'package:biz_zinda/notification_service.dart';
 import 'package:biz_zinda/services/app_link_service.dart';
-import 'package:biz_zinda/services/app_link_service.dart';
 import 'package:biz_zinda/utils/providers.dart';
-import 'package:biz_zinda/view/login_section/login_welcome_screen/view/enterEmailUi.dart';
-import 'package:biz_zinda/view/my_profile/view/widgets/my_profile_button.dart';
-import 'package:biz_zinda/view/notifications/notification_pages/view/widgets/noification_tab_section.dart';
-import 'package:biz_zinda/view/notifications/notification_pages/view/widgets/notification_body_section.dart';
-import 'package:biz_zinda/view/profile_view/view/ui.dart';
-import 'package:biz_zinda/view/upload_pages/view/ui.dart';
 import 'package:biz_zinda/view_model/chat_badge_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -30,7 +20,6 @@ import 'package:biz_zinda/view/other_user_profile/view/other_user_profile_screen
 import 'package:biz_zinda/view/splash/view/splash_screen.dart';
 import 'package:biz_zinda/view/wrapper/view/ui.dart';
 import 'package:biz_zinda/view/welcome/view/ui.dart'; // For WelcomePageUi
-import 'package:biz_zinda/view/login_section/add_newuser/view/ui.dart'; // For AddUserPage
 
 // --- Additions by Cascade to fix build errors ---
 import 'package:biz_zinda/view/home_section/home_pages/view/home_screen.dart';
@@ -44,7 +33,6 @@ import 'package:biz_zinda/view/login_section/phone_number_ui/view_model/view_mod
 // --- End Additions by Cascade ---
 
 // Additional imports based on PRoutes.dart
-import 'package:biz_zinda/Settings/until/PPages.dart';
 import 'package:biz_zinda/Settings/widgets/no_internet.dart';
 import 'package:biz_zinda/view/chat_details_page/view/ui.dart'; // ChatDetailsPageui
 import 'package:biz_zinda/view/chat_section/chat_pages/view/ui.dart'; // ChatPageUi
@@ -74,18 +62,14 @@ import 'package:biz_zinda/view/login_section/phone_number_ui/view/login_screen.d
 import 'package:biz_zinda/view/notifications/notification_pages/view/notification_screen.dart'; // NotificationScreen
 import 'package:biz_zinda/view/my_profile/view/wallet_screen.dart';
 import 'package:biz_zinda/view/referal_page/referal_page_ui.dart'; // ReferalPageUi
-import 'package:biz_zinda/view/subscription_page/view/ui.dart'; // For SubscriptionPageUi
 import 'package:biz_zinda/view/plan_ui/widgets/plan_list.dart'; // For PlanListUi
 import 'package:biz_zinda/view/upload_pages/view/widgets/add_post_screen.dart'; // AddPostScreen
 import 'package:biz_zinda/view/welcome/view/widgets/onboarding_screen_ui.dart'; // OnboardingScreensUi
 // OtherUserProfileScreen, SplashScreen, WrapperView are already imported.
 
-import 'package:biz_zinda/view/login_section/phone_number_ui/view_model/view_model.dart'; // For LoginPhoneNumberViewModel
 import 'package:firebase_messaging/firebase_messaging.dart';
 
 import 'store_subscription/subscription_screen.dart';
-
-
 
 // Must be a top-level function (e.g. not a class method)
 @pragma('vm:entry-point')
@@ -98,79 +82,82 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   debugPrint("Handling a background message: ${message.messageId}");
 }
 
-bool _isInitialized = false;
-
 Future<void> main() async {
   // Wrap entire app initialization in the same zone to avoid zone-mismatch errors.
-  await runZonedGuarded(() async {
-    WidgetsFlutterBinding.ensureInitialized();
-  try {
-    // Initialize Firebase first
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    debugPrint('HB-INIT | Firebase initialized');
+  await runZonedGuarded(
+    () async {
+      WidgetsFlutterBinding.ensureInitialized();
+      try {
+        // Initialize Firebase first
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
+        debugPrint('HB-INIT | Firebase initialized');
 
-    // Set up background messaging handler
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+        // Set up background messaging handler
+        FirebaseMessaging.onBackgroundMessage(
+          _firebaseMessagingBackgroundHandler,
+        );
 
-    // Initialize other services
-    await FCMService().initialize();
-    debugPrint('HB-INIT | FCM service initialized');
-    await AppLinkService().init();
-    debugPrint('HB-INIT | AppLinkService initialized');
+        // Initialize other services
+        await FCMService().initialize();
+        debugPrint('HB-INIT | FCM service initialized');
+        await AppLinkService().init();
+        debugPrint('HB-INIT | AppLinkService initialized');
 
-    // Configure loading indicator
-    configLoading();
-    debugPrint('HB-INIT | configLoading complete');
+        // Configure loading indicator
+        configLoading();
+        debugPrint('HB-INIT | configLoading complete');
 
-    // Limit Flutter image cache to avoid excessive RAM
-    PaintingBinding.instance.imageCache
-      ..maximumSize = 100
-      ..maximumSizeBytes = 50 * 1024 * 1024;
+        // Limit Flutter image cache to avoid excessive RAM
+        PaintingBinding.instance.imageCache
+          ..maximumSize = 100
+          ..maximumSizeBytes = 50 * 1024 * 1024;
+      } catch (e) {
+        debugPrint('Initialization error: $e');
+      }
 
-  } catch (e) {
-    debugPrint('Initialization error: $e');
-  }
+      // Configure global error handlers for Crashlytics
+      FlutterError.onError = (FlutterErrorDetails details) {
+        final exceptionStr = details.exception.toString();
+        // Downgrade common NetworkImage URI mistakes to non-fatal so the app doesn’t crash.
+        if (exceptionStr.contains('No host specified') ||
+            exceptionStr.contains('Connection closed') ||
+            exceptionStr.contains('Handshake error') ||
+            exceptionStr.contains('tile.openstreetmap.org') ||
+            exceptionStr.contains('ClientException')) {
+          FirebaseCrashlytics.instance.recordError(
+            details.exception,
+            details.stack,
+            fatal: false,
+          );
+          return;
+        }
+        FirebaseCrashlytics.instance.recordFlutterFatalError(details);
+      };
 
-  // Configure global error handlers for Crashlytics
-  FlutterError.onError = (FlutterErrorDetails details) {
-    final exceptionStr = details.exception.toString();
-    // Downgrade common NetworkImage URI mistakes to non-fatal so the app doesn’t crash.
-    if (exceptionStr.contains('No host specified') ||
-        exceptionStr.contains('Connection closed') ||
-        exceptionStr.contains('Handshake error') ||
-        exceptionStr.contains('tile.openstreetmap.org') ||
-        exceptionStr.contains('ClientException')) {
-      FirebaseCrashlytics.instance
-          .recordError(details.exception, details.stack, fatal: false);
-      return;
-    }
-    FirebaseCrashlytics.instance.recordFlutterFatalError(details);
-  };
-
-   // All initialization complete – launch the UI
-    runApp(
-      MultiProvider(
-
-        providers: providers,
-        child: const MyApp(),
-
-      ),
-    );
-
-
-  }, (error, stack) {
-    FirebaseCrashlytics.instance.recordError(error, stack);
-  });
+      // All initialization complete – launch the UI
+      runApp(MultiProvider(providers: providers, child: const MyApp()));
+    },
+    (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack);
+    },
+  );
 }
 
-
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-final _shellNavigatorHomeKey = GlobalKey<NavigatorState>(debugLabel: 'shellHome');
-final _shellNavigatorSearchKey = GlobalKey<NavigatorState>(debugLabel: 'shellSearch');
-final _shellNavigatorConnectKey = GlobalKey<NavigatorState>(debugLabel: 'shellConnect');
-final _shellNavigatorProfileKey = GlobalKey<NavigatorState>(debugLabel: 'shellProfile');
+final _shellNavigatorHomeKey = GlobalKey<NavigatorState>(
+  debugLabel: 'shellHome',
+);
+final _shellNavigatorSearchKey = GlobalKey<NavigatorState>(
+  debugLabel: 'shellSearch',
+);
+final _shellNavigatorConnectKey = GlobalKey<NavigatorState>(
+  debugLabel: 'shellConnect',
+);
+final _shellNavigatorProfileKey = GlobalKey<NavigatorState>(
+  debugLabel: 'shellProfile',
+);
 
 // Define the GoRouter instance
 // This router will handle deep links for profiles and can be expanded for other routes.
@@ -193,7 +180,7 @@ final GoRouter mainAppRouter = GoRouter(
     }
 
     // If the app is initialized and the user is at the root, redirect to the home screen.
-    if (state.matchedLocation == '/') {
+    if (state.matchedLocation == '/home') {
       return '/home';
     }
 
@@ -251,29 +238,27 @@ final GoRouter mainAppRouter = GoRouter(
           navigatorKey: _shellNavigatorProfileKey,
           routes: <RouteBase>[
             GoRoute(
-                path: '/profile',
-                name: 'profile',
-                builder: (context, state) {
-                  final profileVM = context.watch<ProfileViewModel>();
-                  final profileType =
-                      profileVM.profileModel?.accountType?.toLowerCase();
-                  if (profileType == "normal") {
-                    return PlanUi();
-                  } else {
-                    return ProfileScreen();
-                  }
-                },
-
-                routes: [
-                  GoRoute(
-                    path: ':userId',
-                    name: 'other-user-profile',
-                    builder: (context, state) {
-                      final userId = state.pathParameters['userId']!;
-                      return OtherUserProfileScreen(userId: userId);
-                    },
-                  ),
-                ]),
+              path: '/profile',
+              name: 'profile',
+              builder: (context, state) {
+                // Scope the profile-type dependency to a Consumer instead of
+                // watching at the route-builder level. Watching here made the
+                // whole GoRoute rebuild whenever ProfileViewModel.notify fired
+                // (e.g. during logout), which corrupts the shell's element
+                // lifecycle on the next login (_lifecycleState == inactive).
+                return Consumer<ProfileViewModel>(
+                  builder: (context, profileVM, _) {
+                    final profileType =
+                        profileVM.profileModel?.accountType?.toLowerCase();
+                    if (profileType == "normal") {
+                      return PlanUi();
+                    } else {
+                      return ProfileScreen();
+                    }
+                  },
+                );
+              },
+            ),
           ],
         ),
       ],
@@ -302,7 +287,8 @@ final GoRouter mainAppRouter = GoRouter(
     GoRoute(
       path: PPages.loginWelcomeScreenUi,
       name: PPages.loginWelcomeScreenUi,
-      builder: (context, state) => const LoginWelcomeScreenUi(), // ✅ change here
+      builder: (context, state) =>
+          const LoginWelcomeScreenUi(), // ✅ change here
     ),
     // GoRoute(
     //   path: '/enter-email',               // or whatever path you want
@@ -397,11 +383,6 @@ final GoRouter mainAppRouter = GoRouter(
       builder: (context, state) => const ChatDetailsPageui(),
     ),
     GoRoute(
-      name: PPages.profileScreen,
-      path: '/profile',
-      builder: (context, state) => ProfileScreen(),
-    ),
-    GoRoute(
       path: PPages.editProfileUi,
       name: PPages.editProfileUi,
       builder: (context, state) => const EditProfileScreen(),
@@ -441,6 +422,7 @@ final GoRouter mainAppRouter = GoRouter(
       name: '/createShop',
       builder: (context, state) => const CreateShopPage(),
     ),
+
     // GoRoute(
     //   path: '/offering/:id',
     //   name: 'offering',
@@ -449,7 +431,6 @@ final GoRouter mainAppRouter = GoRouter(
     //     return OfferSection(id: id);
     //   },
     // ),
-
     GoRoute(
       path: '/offering/:id',
       name: 'offering',
@@ -458,9 +439,7 @@ final GoRouter mainAppRouter = GoRouter(
 
         debugPrint("ROUTE HIT => $id");
 
-        return OfferDetailScreen(
-          offerId: id,
-        );
+        return OfferDetailScreen(offerId: id);
       },
     ),
     GoRoute(
@@ -469,9 +448,7 @@ final GoRouter mainAppRouter = GoRouter(
       builder: (context, state) {
         final userId = state.pathParameters['userId'] ?? '';
 
-        return OtherUserProfileScreen(
-          userId: userId,
-        );
+        return OtherUserProfileScreen(userId: userId);
       },
     ),
 
@@ -541,7 +518,9 @@ final GoRouter mainAppRouter = GoRouter(
     ),
   ],
   onException: (context, state, router) {
-    debugPrint("### GoRouter.onException Triggered ### URI: ${state.uri}, Error: ${state.error}");
+    debugPrint(
+      "### GoRouter.onException Triggered ### URI: ${state.uri}, Error: ${state.error}",
+    );
 
     // If the exception is from our custom deep link scheme, we ignore it.
     if (state.uri.toString().startsWith('com.jobzinda.customers://')) {
@@ -554,7 +533,9 @@ final GoRouter mainAppRouter = GoRouter(
       debugPrint("  Redirecting to splash screen as a fallback.");
       router.go(PPages.splash);
     } else {
-      debugPrint("  Exception occurred on splash screen. Halting redirection to prevent loop.");
+      debugPrint(
+        "  Exception occurred on splash screen. Halting redirection to prevent loop.",
+      );
     }
   },
 );
@@ -564,11 +545,9 @@ class MyApp extends StatefulWidget {
 
   @override
   State<MyApp> createState() => _MyAppState();
-
 }
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
-
   @override
   void initState() {
     super.initState();
@@ -595,7 +574,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      if (mounted) { // Check if the widget is still in the tree
+      if (mounted) {
+        // Check if the widget is still in the tree
         context.read<BadgeViewModel>().fetchNotificationCount();
         context.read<BadgeViewModel>().fetchAdminMessageCount();
         context.read<BadgeViewModel>().fetchUserMessageMessageCount();
@@ -613,15 +593,17 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         highlightColor: Colors.transparent, // Kept from original simple version
-        splashColor: Colors.transparent,   // Kept from original simple version
-        textTheme: const TextTheme(
-          bodySmall: TextStyle(),
-          bodyMedium: TextStyle(),
-          bodyLarge: TextStyle(),
-        ).apply( // Applying to the TextTheme
-          bodyColor: Colors.orange.shade200,
-          displayColor: PColors.white,
-        ),
+        splashColor: Colors.transparent, // Kept from original simple version
+        textTheme:
+            const TextTheme(
+              bodySmall: TextStyle(),
+              bodyMedium: TextStyle(),
+              bodyLarge: TextStyle(),
+            ).apply(
+              // Applying to the TextTheme
+              bodyColor: Colors.orange.shade200,
+              displayColor: PColors.white,
+            ),
         scaffoldBackgroundColor: PColors.white,
         colorScheme: ColorScheme.fromSeed(seedColor: PColors.seed),
         iconTheme: IconThemeData(color: Color(0xFFFB8C00)),

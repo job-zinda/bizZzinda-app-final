@@ -74,12 +74,25 @@ class OfferViewModel with ChangeNotifier {
   }
 
 
+  /// 🔹 CREATE-OFFER IN-FLIGHT GUARD
+  bool _isCreating = false;
+
+  bool get isCreating => _isCreating;
+
   Future<void> createOffer({
     required String description,
     required String city,
     required String state,
     required BuildContext context,
   }) async {
+    /// Ignore repeat taps while a create is already running. The backend also
+    /// rejects duplicates with a 409, but this stops the second request being
+    /// sent at all — so an impatient double-tap never surfaces as an error.
+    if (_isCreating) return;
+
+    _isCreating = true;
+    notifyListeners();
+
     EasyLoading.show(status: "Creating...");
 
     try {
@@ -123,11 +136,17 @@ class OfferViewModel with ChangeNotifier {
 
         Navigator.pop(context, true);
       } else {
+        /// Covers the 409 duplicate response — ApiService sets
+        /// `validateStatus: (status) => true`, so the body arrives here rather
+        /// than as a thrown DioException, and `message` carries the reason.
         EasyLoading.showError(response.data['message'] ?? "Failed");
       }
     } catch (e) {
       EasyLoading.dismiss();
       EasyLoading.showError("Error: $e");
+    } finally {
+      _isCreating = false;
+      notifyListeners();
     }
   }
 
@@ -197,17 +216,23 @@ class OfferViewModel with ChangeNotifier {
     try {
       print("📡 CALLING ALL OFFER API PAGE: $page");
 
-      final headers = await LoggedInUser.getAuthorizationHeader();
+      final url = LoggedInUser.isGuest
+          ? "${Api.baseurl}/api/v1/offering/public-offerings"
+          : "${Api.baseurl}/api/v1/offering/listAllOfferings";
+
+      final headers = LoggedInUser.isGuest
+          ? <String, String>{}
+          : await LoggedInUser.getAuthorizationHeader();
 
       Response response = await Dio().get(
-        "${Api.baseurl}/api/v1/offering/listAllOfferings",
+        url,
         queryParameters: {
           "pageNumber": page,
           "pageSize": 10,
         },
         options: Options(headers: {
           ...headers,
-          "verifyPlatform": "bizzinda", // ⚠️ check spelling
+          "X-Platform": "bizzzinda",
         }),
       );
 
@@ -216,7 +241,7 @@ class OfferViewModel with ChangeNotifier {
       if (response.statusCode == 200) {
         final data = response.data['data'];
 
-        List list = data['offerings'];
+        List list = data['offerings'] ?? data['posts'] ?? [];
 
         final offers =
         list.map((e) => OfferingModel.fromJson(e)).toList();
@@ -319,10 +344,30 @@ class OfferViewModel with ChangeNotifier {
 
       EasyLoading.dismiss();
 
-      if (response.statusCode == 200) {
-        return response.data; // 👈 UI-il Razorpay open cheyyan
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final resData = response.data;
+        if (resData is Map<String, dynamic>) {
+          if (resData['status'] == false) {
+            String errorMsg = resData['message'] ?? resData['error'] ?? "Failed";
+            EasyLoading.showError(errorMsg);
+            return null;
+          }
+          if (resData['data'] != null && resData['data'] is Map<String, dynamic>) {
+            return resData['data'] as Map<String, dynamic>;
+          }
+          if (resData['order'] != null && resData['order'] is Map<String, dynamic>) {
+            return resData['order'] as Map<String, dynamic>;
+          }
+          return resData;
+        }
+        return null;
       } else {
-        EasyLoading.showError(response.data['message'] ?? "Failed");
+        final resData = response.data;
+        String msg = "Failed (${response.statusCode})";
+        if (resData is Map<String, dynamic>) {
+          msg = resData['message'] ?? resData['error'] ?? resData['msg'] ?? "Failed (${response.statusCode})";
+        }
+        EasyLoading.showError(msg);
         return null;
       }
     } catch (e) {
@@ -331,6 +376,7 @@ class OfferViewModel with ChangeNotifier {
       return null;
     }
   }
+
   Future<void> verifyPromotionPayment({
     required String orderId,
     required String paymentId,
@@ -348,10 +394,20 @@ class OfferViewModel with ChangeNotifier {
 
       EasyLoading.dismiss();
 
-      if (response.statusCode == 201) {
-        EasyLoading.showSuccess("Promotion Successful 🎉");
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final resData = response.data;
+        if (resData is Map<String, dynamic> && resData['status'] == false) {
+          EasyLoading.showError(resData['message'] ?? resData['error'] ?? "Verification failed");
+        } else {
+          EasyLoading.showSuccess("Promotion Successful 🎉");
+        }
       } else {
-        EasyLoading.showError(response.data['message'] ?? "Verification failed");
+        final resData = response.data;
+        String msg = "Verification failed";
+        if (resData is Map<String, dynamic>) {
+          msg = resData['message'] ?? resData['error'] ?? "Verification failed (${response.statusCode})";
+        }
+        EasyLoading.showError(msg);
       }
     } catch (e) {
       EasyLoading.dismiss();

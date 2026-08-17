@@ -33,6 +33,8 @@ class ProfileModel {
   bool? isBlocked;
   List<String>? skills;
   bool? isShopOwner;
+  String? contactNumber;
+  String? whatsappNumber;
 
 
   ProfileModel(
@@ -67,7 +69,9 @@ class ProfileModel {
       this.referralCode,
       this.coinBalance,
       this.referredBy,
-      this.isShopOwner});
+      this.isShopOwner,
+      this.contactNumber,
+      this.whatsappNumber});
 
   ProfileModel.fromJson(Map<String, dynamic> json) {
     location =
@@ -98,7 +102,9 @@ class ProfileModel {
     district = json['district'];
     state = json['state'];
     isBlocked = json['isBlocked'];
-    isShopOwner: json['isShopOwner'];
+    isShopOwner = json['isShopOwner'];
+    contactNumber = json['contactNumber'];
+    whatsappNumber = json['whatsappNumber'];
 
     referralCode = json['referralCode'];
     referredBy = json['referredBy'];

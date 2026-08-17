@@ -263,7 +263,11 @@ class _AddPostScreenState extends State<AddOfferScreen> {
                   ),
                 ),
                 trailing: InkWell(
-                  onTap: () {
+                  // Disabled while a create is in flight so the same offer
+                  // cannot be posted twice by tapping repeatedly.
+                  onTap: offerViewModel.isCreating
+                      ? null
+                      : () {
                     if (_formKey.currentState?.validate() ?? false) {
 
                       if (offerViewModel.selectedUrl == null) {
@@ -291,8 +295,10 @@ class _AddPostScreenState extends State<AddOfferScreen> {
                     padding:
                     const EdgeInsets.symmetric(horizontal: 30, vertical: 6),
                     child: textWidget(
-                        text: 'Post',
-                        color: Color(0xFFFB8C00),
+                        text: offerViewModel.isCreating ? 'Posting...' : 'Post',
+                        color: offerViewModel.isCreating
+                            ? const Color(0x80FB8C00)
+                            : const Color(0xFFFB8C00),
                         fontweight: FontWeight.w500,
                         fontsize: 14),
                   ),

@@ -32,6 +32,8 @@ class _AddUserPageState extends State<AddUserPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _contactNumberController = TextEditingController();
+  final TextEditingController _whatsappNumberController = TextEditingController();
 
   final GlobalKey<FormState> form_key = GlobalKey<FormState>();
   bool _obscure = true;
@@ -95,6 +97,10 @@ class _AddUserPageState extends State<AddUserPage> {
                       const SizedBox(height: 13),
 
                       phonenUmberField(),
+                      const SizedBox(height: 13),
+                      contactNumberField(),
+                      const SizedBox(height: 13),
+                      whatsappNumberField(),
                     ],
                   ),
                 ),
@@ -207,6 +213,32 @@ class _AddUserPageState extends State<AddUserPage> {
     );
   }
 
+  // 🔹 Contact Number
+  Widget contactNumberField() {
+    return CustomTextFeild(
+      controller: _contactNumberController,
+      hintText: 'Call contact number (optional)',
+      borderColor: const Color(0xFFFB8C00),
+      filColor: PColors.white,
+      maxLength: 10,
+      keyboardType: TextInputType.phone,
+      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+    );
+  }
+
+  // 🔹 WhatsApp Number
+  Widget whatsappNumberField() {
+    return CustomTextFeild(
+      controller: _whatsappNumberController,
+      hintText: 'WhatsApp number (optional)',
+      borderColor: const Color(0xFFFB8C00),
+      filColor: PColors.white,
+      maxLength: 10,
+      keyboardType: TextInputType.phone,
+      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+    );
+  }
+
   // 🔥 Register Button
   Widget button() {
     var model = context.read<AddReferalViewModel>();
@@ -223,20 +255,25 @@ class _AddUserPageState extends State<AddUserPage> {
           String deviceId = await getDeviceId();
           final auth = AuthUsernameService(NetworkApiService());
 
-          final resp = await auth.registerWithUsername(
-            name: _nameController.text.trim(),
-            countryCode: "+91",
-            mobileNumber: context
-                .read<LoginPhoneNumberViewModel>()
-                .numberController
-                .text
-                .trim(),
-            username: _usernameController.text.trim(),
-            password: _passwordController.text.trim(),
-            email: widget.email,
-            deviceId: deviceId,
-            referralCode: model.referralCode,
-          );
+            final contactNo = _contactNumberController.text.trim();
+            final whatsappNo = _whatsappNumberController.text.trim();
+
+            final resp = await auth.registerWithUsername(
+              name: _nameController.text.trim(),
+              countryCode: "+91",
+              mobileNumber: context
+                  .read<LoginPhoneNumberViewModel>()
+                  .numberController
+                  .text
+                  .trim(),
+              username: _usernameController.text.trim(),
+              password: _passwordController.text.trim(),
+              email: widget.email,
+              deviceId: deviceId,
+              referralCode: model.referralCode,
+              contactNumber: contactNo.isEmpty ? null : contactNo,
+              whatsappNumber: whatsappNo.isEmpty ? null : whatsappNo,
+            );
 
           final data = resp['data'];
           LoggedInUser.login(data);

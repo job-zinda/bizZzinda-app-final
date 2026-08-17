@@ -4,7 +4,10 @@ import 'package:biz_zinda/Settings/until/PColors.dart';
 import 'package:go_router/go_router.dart';
 import 'package:biz_zinda/Settings/until/PPages.dart';
 import 'package:biz_zinda/Settings/widgets/custom_elevated_button.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:biz_zinda/model/logged_in_user.dart';
+import 'package:biz_zinda/utils/contact_launcher.dart';
+import 'package:biz_zinda/utils/guest_helper.dart';
 
 import 'package:biz_zinda/view_model/chat_details_view_model.dart';
 import 'package:biz_zinda/view_model/post_view_model.dart';
@@ -23,40 +26,66 @@ class OtherUserProfileButtonUi extends StatefulWidget {
 
 class _OtherUserProfileButtonUiState extends State<OtherUserProfileButtonUi> {
   bool showRatingSection = true;
-  
-  Future<void> _shareUserProfile(BuildContext context, String userId, String userName) async {
-    // Construct the direct app link
-    final String appLink = 'https://jobzinda.com/profile/$userId';
+  Future<void> _shareUserProfile(
+      BuildContext context,
+      String userId,
+      String userName,
+      ) async {
+    final String profileUrl =
+        'https://server2.jobzinda.com/profile/$userId';
 
-    // App store links
-    const String playStoreUrl = 'https://play.google.com/store/apps/details?id=com.jobZinda.customers';
-    // TODO: Verify this iOS App Store URL and ID. 'id123456789' is likely a placeholder.
-    const String appStoreUrl = 'https://apps.apple.com/app/job-zinda/id123456789'; 
+    // final String profileUrl =
+    //     'https://bizzinda.com/profile/$userId';
 
-    // Create the shareable message
-    final String shareText = "🔍 Discover $userName on Job Zinda!\n\n"
-        "👉 Tap the link to view their profile and connect:\n"
-        "$appLink\n\n"
-        "💼 Find your next opportunity with Job Zinda!\n\n"
-        "📱 Get the app:\n"
-        "Android: $playStoreUrl\n"
-        "iOS: $appStoreUrl";
+    const String playStoreUrl =
+        'https://play.google.com/store/apps/details?id=com.biz_zinda.app';
 
-    try {
-      // Show the share dialog
-      await Share.share(shareText, subject: 'Check out this profile on Job Zinda!');
-      // Optional: Show success message if desired
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   const SnackBar(content: Text('Profile link shared!'))
-      // );
-    } catch (e) {
-      // Handle potential errors from the Share.share() method itself
-      print('Error sharing profile: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error sharing profile: ${e.toString()}'))
-      );
-    }
+    final String shareText =
+        "🔍 Discover $userName on Biz Zinda!\n\n"
+        "👉 View Profile:\n"
+        "$profileUrl\n\n"
+        "📱 Download Biz Zinda:\n"
+        "$playStoreUrl";
+
+    await Share.share(
+      shareText,
+      subject: 'Check out this profile on Biz Zinda!',
+    );
   }
+  
+  // Future<void> _shareUserProfile(BuildContext context, String userId, String userName) async {
+  //   // Construct the direct app link
+  //   final String appLink = 'https://jobzinda.com/profile/$userId';
+  //
+  //   // App store links
+  //   const String playStoreUrl = 'https://play.google.com/store/apps/details?id=com.jobZinda.customers';
+  //   // TODO: Verify this iOS App Store URL and ID. 'id123456789' is likely a placeholder.
+  //   const String appStoreUrl = 'https://apps.apple.com/app/job-zinda/id123456789';
+  //
+  //   // Create the shareable message
+  //   final String shareText = "🔍 Discover $userName on Job Zinda!\n\n"
+  //       "👉 Tap the link to view their profile and connect:\n"
+  //       "$appLink\n\n"
+  //       "💼 Find your next opportunity with Job Zinda!\n\n"
+  //       "📱 Get the app:\n"
+  //       "Android: $playStoreUrl\n"
+  //       "iOS: $appStoreUrl";
+  //
+  //   try {
+  //     // Show the share dialog
+  //     await Share.share(shareText, subject: 'Check out this profile on Job Zinda!');
+  //     // Optional: Show success message if desired
+  //     // ScaffoldMessenger.of(context).showSnackBar(
+  //     //   const SnackBar(content: Text('Profile link shared!'))
+  //     // );
+  //   } catch (e) {
+  //     // Handle potential errors from the Share.share() method itself
+  //     print('Error sharing profile: $e');
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text('Error sharing profile: ${e.toString()}'))
+  //     );
+  //   }
+  // }
   bool hasRated = false;
   double? userRating;
   String? userFeedback;
@@ -158,6 +187,7 @@ class _OtherUserProfileButtonUiState extends State<OtherUserProfileButtonUi> {
               button(
                   btn: postViewModel.isFollowed ? 'Unfollow' : 'Follow',
                   fun: () {
+                    if (isGuestUser(context)) return;
                     if (postViewModel.isFollowed) {
                       postViewModel.unFollowUser();
                     } else {
@@ -171,6 +201,20 @@ class _OtherUserProfileButtonUiState extends State<OtherUserProfileButtonUi> {
               ),
               ElevatedButton(
                 onPressed: () {
+                  if (LoggedInUser.isGuest) {
+                    final String? wa = postViewModel.otherUser?.whatsappNumber ?? postViewModel.otherUser?.contactNumber;
+                    if (wa != null && wa.trim().isNotEmpty) {
+                      launchWhatsAppChat(
+                        wa,
+                        postViewModel.otherUser?.countryCode,
+                        message: 'HI i found your offer in Biz Zinda',
+                      );
+                    } else {
+                      isGuestUser(context);
+                    }
+                    return;
+                  }
+                  if (isGuestUser(context)) return;
                   context
                       .read<ChatDetailsViewModel>()
                       .fetchAllMessageProfile(
@@ -221,6 +265,72 @@ class _OtherUserProfileButtonUiState extends State<OtherUserProfileButtonUi> {
             ],
           ),
         ),
+
+        /// Call / WhatsApp profile options (rendered optionally based on configured numbers)
+        Builder(
+          builder: (context) {
+            final String? contactNo = postViewModel.otherUser?.contactNumber;
+            final String? whatsappNo = postViewModel.otherUser?.whatsappNumber;
+            final bool showCall = contactNo != null && contactNo.trim().isNotEmpty;
+            final bool showWhatsapp = whatsappNo != null && whatsappNo.trim().isNotEmpty;
+
+            if (!showCall && !showWhatsapp) return const SizedBox.shrink();
+
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              child: Row(
+                children: [
+                  if (showCall)
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFFFB8C00),
+                          side: const BorderSide(color: Color(0xFFFB8C00), width: 2),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                        ),
+                        icon: const Icon(Icons.phone_outlined, size: 20),
+                        label: const Text(
+                          'Call Now',
+                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                        ),
+                        onPressed: () => launchPhoneCall(
+                          contactNo,
+                          postViewModel.otherUser?.countryCode,
+                        ),
+                      ),
+                    ),
+                  if (showCall && showWhatsapp) const SizedBox(width: 6),
+                  if (showWhatsapp)
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFFB8C00),
+                          foregroundColor: PColors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                        ),
+                        icon: const FaIcon(FontAwesomeIcons.whatsapp, size: 20),
+                        label: const Text(
+                          'WhatsApp',
+                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                        ),
+                        onPressed: () => launchWhatsAppChat(
+                          whatsappNo,
+                          postViewModel.otherUser?.countryCode,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
+        ),
         if (showRatingSection && !hasRated && postViewModel.otherUser?.sId != null)
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
@@ -245,6 +355,7 @@ class _OtherUserProfileButtonUiState extends State<OtherUserProfileButtonUi> {
                 const SizedBox(width: 10),
                 InkWell(
                   onTap: () {
+                    if (isGuestUser(context)) return;
                     _showRatingDialog(context, postViewModel.otherUser!.sId!);
                   },
                   child: Container(
@@ -322,6 +433,7 @@ class _OtherUserProfileButtonUiState extends State<OtherUserProfileButtonUi> {
                 ),
                 InkWell(
                   onTap: () {
+                    if (isGuestUser(context)) return;
                     _showRatingDialog(context, postViewModel.otherUser!.sId!);
                   },
                   child: Container(

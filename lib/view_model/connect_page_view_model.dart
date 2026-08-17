@@ -108,7 +108,7 @@ class ConnectPageViewModel extends ChangeNotifier {
 
     try {
       Response response = await ApiService().get(
-        '/api/v1/store/get-nearest-stores?lat=$lat&lng=$lng',
+        '${Api.baseurl}/api/v1/store/get-nearest-stores?lat=$lat&lng=$lng',
       );
 
       if (response.statusCode == 200) {

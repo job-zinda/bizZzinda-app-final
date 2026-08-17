@@ -113,10 +113,12 @@ class AuthUsernameService {
     required bool getNotifications,
     required double lat,
     required double lng,
+    List<String>? skills,
+    String? deviceId,
     String? email,
     String? referralCode,
-    List<String>? skills,
-    required String deviceId,
+    String? contactNumber,
+    String? whatsappNumber,
   }) async {
 
     final body = <String, dynamic>{
@@ -130,8 +132,10 @@ class AuthUsernameService {
       'getNotifications': getNotifications,
       'lat': lat,
       'lng': lng,
-      'skills': skills,
-      "deviceId": deviceId,
+      if (skills != null) 'skills': skills,
+      if (deviceId != null) "deviceId": deviceId,
+      if (contactNumber != null) 'contactNumber': contactNumber,
+      if (whatsappNumber != null) 'whatsappNumber': whatsappNumber,
     };
     if (email != null) body['email'] = email;
     if (referralCode != null) body['referralCode'] = referralCode;
@@ -163,10 +167,12 @@ class AuthUsernameService {
     bool getNotifications = true,
     double lat = 0,
     double lng = 0,
+    List<String>? skills,
+    String? deviceId,
     String? email,
     String? referralCode,
-    List<String>? skills,
-    required String deviceId,
+    String? contactNumber,
+    String? whatsappNumber,
   }) async {
     final body = <String, dynamic>{
       'countryCode': countryCode,
@@ -179,8 +185,10 @@ class AuthUsernameService {
       'getNotifications': getNotifications,
       'lat': lat,
       'lng': lng,
-      'skills': skills,
-      "deviceId": deviceId,
+      if (skills != null) 'skills': skills,
+      if (deviceId != null) "deviceId": deviceId,
+      if (contactNumber != null) 'contactNumber': contactNumber,
+      if (whatsappNumber != null) 'whatsappNumber': whatsappNumber,
     };
     if (email != null) body['email'] = email;
     if (referralCode != null && referralCode.isNotEmpty) body['referralCode'] = referralCode;

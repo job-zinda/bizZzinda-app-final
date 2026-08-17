@@ -1,4 +1,5 @@
 import 'package:biz_zinda/Terms_and_conditions/TermsAndConditionUi.dart';
+import 'package:biz_zinda/model/logged_in_user.dart';
 import 'package:biz_zinda/utils/api_service.dart';
 import 'package:biz_zinda/view/Create_My_Offer/OfferSectionWidget.dart';
 import 'package:biz_zinda/view/create_my_offer/offermodel.dart';
@@ -118,7 +119,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   bool _assistantHintVisible = false;
-  late PostViewModel _postViewModel;
+  // Nullable (not `late`): it is never assigned, so reading it in dispose()
+  // via `_postViewModel?.` used to throw LateInitializationError during the
+  // shell teardown on logout, leaving the element tree half-unmounted.
+  PostViewModel? _postViewModel;
   bool _wasPostsLoading = true;
 
   Future<void> _showAssistantHint() async {
@@ -155,7 +159,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             children: [
               DrawerHeader(
                 decoration: BoxDecoration(color: primaryColor,),
-                child: value.profileModel == null
+                child: LoggedInUser.isGuest
+                    ? Row(
+                  children: [
+                    const CircleAvatar(
+                      child: Icon(Icons.person_outline),
+                    ),
+                    const SizedBox(width: 10),
+                    textWidget(text: 'Guest User', color: Colors.white),
+                  ],
+                )
+                    : value.profileModel == null
                     ? Row(
                   children: [
                     // Skeleton avatar
@@ -188,6 +202,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   ],
                 ),
               ),
+              if (LoggedInUser.isGuest)
+                drawerWidget(
+                    title: "Login / Sign Up",
+                    icon: Icon(Icons.login, color: primaryColor),
+                    fun: () {
+                      Navigator.pop(context);
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (context.mounted) {
+                          context.go(PPages.loginWelcomeScreenUi);
+                        }
+                      });
+                    }),
               // if (context.read<ProfileViewModel>().profileModel != null &&
               //     (context.read<ProfileViewModel>().profileModel!.profession ?? '')
               //         .toLowerCase()
@@ -216,13 +242,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               //       context.pushNamed(PPages.taskCornerAssignments);
               //     },
               //   ),
-              drawerWidget(
-                  title: "Wallet",
-                  icon: Icon(Icons.account_balance_wallet_outlined, color:  primaryColor,),
-                  fun: () {
-                    Navigator.pop(context);
-                    context.push(PPages.wallet);
-                  }),
+              if (!LoggedInUser.isGuest)
+                drawerWidget(
+                    title: "Wallet",
+                    icon: Icon(Icons.account_balance_wallet_outlined, color:  primaryColor,),
+                    fun: () {
+                      Navigator.pop(context);
+                      context.push(PPages.wallet);
+                    }),
               // drawerWidget(
               //   title: "Orders",
               //   icon: SvgPicture.asset(
@@ -313,46 +340,48 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     Navigator.pop(context);
                     context.pushNamed(PPages.helpSupportUi);
                   }),
-              drawerWidget(
-                  title: "Delete account",
-                  icon: Icon(
-                    Icons.delete,
-                    color: primaryColor,
-                    size: 18,
-                  ),
-                  fun: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => logoutBox(
-                          context: context,
-                          title: "Do you want to delete your account?",
-                          onTap: () {
-                            context
-                                .read<ProfileViewModel>()
-                                .deleteProfile(context);
-                          }),
-                    );
-                  }),
-              drawerWidget(
-                  title: "Logout",
-                  icon: Icon(
-                    Icons.logout,
-                    color: PColors.red,
-                    size: 18,
-                  ),
-                  fun: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => logoutBox(
-                          context: context,
-                          title: "Do you want to logout?",
-                          onTap: () {
-                            context
-                                .read<ProfileViewModel>()
-                                .userLogout(context);
-                          }),
-                    );
-                  }),
+              if (!LoggedInUser.isGuest)
+                drawerWidget(
+                    title: "Delete account",
+                    icon: Icon(
+                      Icons.delete,
+                      color: primaryColor,
+                      size: 18,
+                    ),
+                    fun: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => logoutBox(
+                            context: context,
+                            title: "Do you want to delete your account?",
+                            onTap: () {
+                              context
+                                  .read<ProfileViewModel>()
+                                  .deleteProfile(context);
+                            }),
+                      );
+                    }),
+              if (!LoggedInUser.isGuest)
+                drawerWidget(
+                    title: "Logout",
+                    icon: Icon(
+                      Icons.logout,
+                      color: PColors.red,
+                      size: 18,
+                    ),
+                    fun: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => logoutBox(
+                            context: context,
+                            title: "Do you want to logout?",
+                            onTap: () {
+                              context
+                                  .read<ProfileViewModel>()
+                                  .userLogout(context);
+                            }),
+                      );
+                    }),
             ],
           ),
         ),
@@ -426,9 +455,28 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       itemCount: bannerVM.topBanners.length,
                       itemBuilder: (context, index) {
                         final banner = bannerVM.topBanners[index];
+                        final imageUrl = banner.mediaUrl ?? banner.bannerImageUrl ?? "";
+                        if (imageUrl.isEmpty) {
+                          return ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.asset(
+                              'assets/images/homebanner2.jpeg',
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                            ),
+                          );
+                        }
                         return Image.network(
-                          banner.mediaUrl ?? "",
+                          imageUrl,
                           fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.asset(
+                              'assets/images/homebanner2.jpeg',
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                            ),
+                          ),
                         );
                       },
                     )

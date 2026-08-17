@@ -19,9 +19,11 @@ class MyProfileButtonUi extends StatelessWidget {
       String userId,
       String userName,
       ) async {
-
     final String profileUrl =
-        'https://bizzinda.com/profile/$userId';
+        'https://server2.jobzinda.com/profile/$userId';
+
+    // final String profileUrl =
+    //     'https://bizzinda.com/profile/$userId';
 
     const String playStoreUrl =
         'https://play.google.com/store/apps/details?id=com.biz_zinda.app';

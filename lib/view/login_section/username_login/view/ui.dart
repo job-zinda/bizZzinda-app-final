@@ -82,8 +82,11 @@ class _UsernameLoginScreenState extends State<UsernameLoginScreen> {
 
       EasyLoading.dismiss();
 
-      // Navigate to splash or main page
-      context.goNamed(PPages.loginSplashUi);
+      // Defer so the ViewModel's notifyListeners() rebuild flushes before the
+      // Router navigates away — prevents _lifecycleState == inactive assertion.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) context.goNamed(PPages.loginSplashUi);
+      });
 
     } catch (_) {
       EasyLoading.dismiss();

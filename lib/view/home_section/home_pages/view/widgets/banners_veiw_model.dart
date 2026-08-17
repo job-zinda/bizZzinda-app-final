@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import '../../../../../model/banners_model.dart';
+import '../../../../../model/logged_in_user.dart';
+import '../../../../../utils/api_url.dart';
 
 class BannerViewModel extends ChangeNotifier {
 
@@ -19,9 +21,10 @@ class BannerViewModel extends ChangeNotifier {
 
       Dio dio = Dio();
 
-      final response = await dio.get(
-        'http://10.0.2.2:4001/api/v1/banner/listBannersUser',
-      );
+      final url = LoggedInUser.isGuest
+          ? Api.publicBannersUrl
+          : Api.listBanners;
+      final response = await dio.get(url);
 
       final bannerList = response.data['data']['banners'] as List;
 

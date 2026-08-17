@@ -57,6 +57,10 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
 
+    if (widget.offeringId != null && widget.offeringId!.isNotEmpty) {
+      _messageController.text = "HI i found your offer in Biz Zinda";
+    }
+
     _fetchMessages();
 
     /// REDUCED POLLING
@@ -943,71 +947,92 @@ class _ChatScreenState extends State<ChatScreen> {
 
 
   Widget _buildOfferPreview() {
-    if (!showOfferPreview ||
-        _resolvedOfferImage.isEmpty) {
+    if (!showOfferPreview || _resolvedOfferImage.isEmpty) {
       return const SizedBox.shrink();
     }
 
     return Container(
-      margin:
-      const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 5,
-      ),
-
-      padding:
-      const EdgeInsets.all(8),
-
+      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color:
-        Colors.orange.shade50,
-
-        borderRadius:
-        BorderRadius.circular(14),
+        color: Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: const Border(
+          left: BorderSide(color: Colors.orange, width: 4),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-
+      padding: const EdgeInsets.all(8),
       child: Row(
         children: [
           ClipRRect(
-            borderRadius:
-            BorderRadius.circular(
-              10,
-            ),
-
+            borderRadius: BorderRadius.circular(8),
             child: Image.network(
-              _resolvedOfferImage,
-
-              width: 60,
-
-              height: 60,
-
+              _makeFullImageUrl(_resolvedOfferImage),
+              width: 55,
+              height: 55,
               fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                width: 55,
+                height: 55,
+                color: Colors.grey.shade300,
+                child: const Icon(Icons.image, size: 24, color: Colors.grey),
+              ),
             ),
           ),
-
           const SizedBox(width: 10),
-
           Expanded(
             child: Column(
-              crossAxisAlignment:
-              CrossAxisAlignment.start,
-
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  widget.shopName,
-
-                  style:
-                  const TextStyle(
-                    fontWeight:
-                    FontWeight.bold,
+                Row(
+                  children: [
+                    const Icon(Icons.reply, size: 14, color: Colors.orange),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        widget.shopName.isNotEmpty ? widget.shopName : "Store Offer",
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                          color: Colors.orange,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                if (_resolvedOfferBio.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    _resolvedOfferBio,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade800,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-
-                Text(
-                  _resolvedOfferBio,
-                ),
+                ],
               ],
             ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, size: 20, color: Colors.grey),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            onPressed: () {
+              setState(() {
+                showOfferPreview = false;
+              });
+            },
           ),
         ],
       ),

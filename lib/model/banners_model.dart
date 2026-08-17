@@ -35,8 +35,8 @@ class Banners {
     sId = json['_id'];
     documentStatus = json['documentStatus'];
     title = json['title'];
-    bannerImageUrl = json['bannerImageUrl'] ?? json['mediaUrl'];
-    mediaUrl = json['mediaUrl'];
+    bannerImageUrl = json['bannerImageUrl'] ?? json['mediaUrl'] ?? json['imageUrl'];
+    mediaUrl = json['mediaUrl'] ?? json['bannerImageUrl'] ?? json['imageUrl'];
     bannerOnTapAction = json['bannerOnTapAction'];
     subscriptionType = json['subscriptionType'];
     subscriptionPlanId = json['subscriptionPlanId'];

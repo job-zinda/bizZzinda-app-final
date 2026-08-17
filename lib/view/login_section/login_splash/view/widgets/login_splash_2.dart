@@ -19,7 +19,7 @@ class LoginSplash2Ui extends StatelessWidget {
         actions: [
           GestureDetector(
               onTap: () {
-              context.go('/home') ;
+              context.replace('/home');
               },
               child: Icon(
                 Icons.close,
@@ -45,7 +45,7 @@ class LoginSplash2Ui extends StatelessWidget {
               ),
             ),
             LoginHeadingUi(
-              title: "Don’t miss anything",
+              title: "Don't miss anything",
               description:
                   "Get real-time updates on new freelancer profiles, project milestones, and important messages.\n\nEnable notifications to stay in the loop and seize every opportunity.",
             ),
@@ -67,7 +67,7 @@ class LoginSplash2Ui extends StatelessWidget {
           borderRadius: 18,
           text: "Not now",
           onPressed: () {
-             context.go('/home') ;
+            context.replace('/home');
           },
           bgcolor: Colors.purple.shade50,
           textColor:   Color(0xFF8A4FFF),
@@ -81,7 +81,7 @@ class LoginSplash2Ui extends StatelessWidget {
           borderRadius: 18,
           text: "Sure",
           onPressed: () {
-            context.go('/home') ;
+            context.replace('/home');
           },
           bgcolor: PColors.white,
           textColor: Color(0xFF8A4FFF),

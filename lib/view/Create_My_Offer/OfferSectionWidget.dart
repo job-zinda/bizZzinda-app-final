@@ -17,6 +17,9 @@ import 'package:provider/provider.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'offermodel.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:biz_zinda/utils/contact_launcher.dart';
+import 'package:biz_zinda/utils/guest_helper.dart';
+import 'package:biz_zinda/view_model/post_view_model.dart';
 import 'package:biz_zinda/view/edit_profile/view/edit_profile_screen.dart';
 import 'package:video_player/video_player.dart';
 
@@ -204,14 +207,18 @@ class _OfferSectionState extends State<OfferSection> {
   }
 
   void openCheckout(Map<String, dynamic> data) {
+    final String key = data['key_id'] ?? data['key'] ?? '';
+    final dynamic amount = data['amount'];
+    final String currency = data['currency'] ?? 'INR';
+    final String orderId = data['orderId'] ?? data['order_id'] ?? data['id'] ?? '';
+
     var options = {
-      'key': data['key_id'],
-      'amount': data['amount'],
-      // 'amount': 100,
-      'currency': data['currency'],
+      'key': key,
+      'amount': amount,
+      'currency': currency,
       'name': 'JobZinda',
       'description': 'Offer Promotion',
-      'order_id': data['orderId'],
+      'order_id': orderId,
     };
 
     _razorpay.open(options);
@@ -432,6 +439,25 @@ class _OfferSectionState extends State<OfferSection> {
                               }
 
                             } else {
+
+                              if (LoggedInUser.isGuest) {
+                                String? wa = offer.whatsappNumber ?? offer.contactNumber;
+                                if (wa == null || wa.trim().isEmpty) {
+                                  await context.read<PostViewModel>().fetchOtherUserProfileDetails(userID: offer.userId);
+                                  final otherUser = context.read<PostViewModel>().otherUser;
+                                  wa = otherUser?.whatsappNumber ?? otherUser?.contactNumber;
+                                }
+                                if (wa != null && wa.trim().isNotEmpty) {
+                                  final String imgUrl = _fullMediaUrl(offer.mediaUrl);
+                                  final String msg = imgUrl.isNotEmpty
+                                      ? "HI i found your offer in Biz Zinda\n$imgUrl"
+                                      : "HI i found your offer in Biz Zinda";
+                                  launchWhatsAppChat(wa, null, message: msg);
+                                } else {
+                                  isGuestUser(context);
+                                }
+                                return;
+                              }
 
                               if (offer.userId == null ||
                                   offer.userId!.isEmpty ||
@@ -771,14 +797,47 @@ class _OfferSectionState extends State<OfferSection> {
                                 final String shareUrl =
                                     "https://server2.jobzinda.com/offering/${offer.id.trim()}";
 
-                                final String text = """
-🔥 Check this offer!
+                                String? wa = offer.whatsappNumber ?? offer.contactNumber;
+                                if (wa == null || wa.trim().isEmpty) {
+                                  if (offer.userId == LoggedInUser.id) {
+                                    wa = LoggedInUser.whatsappNumber ?? LoggedInUser.contactNumber;
+                                  }
+                                }
+                                if (wa == null || wa.trim().isEmpty) {
+                                   final String? uId = offer.userId;
+                                   if (uId != null && uId.isNotEmpty) {
+                                     await context.read<PostViewModel>().fetchOtherUserProfileDetails(userID: uId);
+                                     final otherUser = context.read<PostViewModel>().otherUser;
+                                     wa = otherUser?.whatsappNumber ?? otherUser?.contactNumber;
+                                   }
+                                 }
 
-${offer.bio ?? ''}
+                                String whatsappLink = "";
+                                if (wa != null && wa.trim().isNotEmpty) {
+                                  String cleanNum = wa.replaceAll(RegExp(r'[^\d]'), '');
+                                  if (!cleanNum.startsWith('91') && cleanNum.length == 10) {
+                                    cleanNum = '91$cleanNum';
+                                  }
+                                  final String encodedMsg = Uri.encodeComponent("HI i found your offer in Biz Zinda");
+                                  whatsappLink = "https://wa.me/$cleanNum?text=$encodedMsg";
+                                }
 
-👉 Open Offer:
-$shareUrl
-""";
+                                final StringBuffer sb = StringBuffer();
+                                sb.writeln("🔥 Check this offer!");
+                                sb.writeln();
+                                if ((offer.bio ?? '').isNotEmpty) {
+                                  sb.writeln(offer.bio);
+                                  sb.writeln();
+                                }
+                                if (whatsappLink.isNotEmpty) {
+                                  sb.writeln("💬 Chat on WhatsApp:");
+                                  sb.writeln(whatsappLink);
+                                  sb.writeln();
+                                }
+                                sb.writeln("👉 Open Offer:");
+                                sb.write(shareUrl);
+
+                                final String text = sb.toString();
 
                                 try {
 

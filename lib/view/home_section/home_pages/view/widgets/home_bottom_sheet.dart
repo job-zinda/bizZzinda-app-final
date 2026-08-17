@@ -1,5 +1,6 @@
 import 'package:biz_zinda/model/post_model.dart';
 import 'package:biz_zinda/view_model/post_view_model.dart';
+import 'package:biz_zinda/utils/guest_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
@@ -36,6 +37,7 @@ class HomeBottomsheetUi extends StatelessWidget {
                   icon: null,
                   title: postViewModel.isFollowed ? 'Unfollow' : 'Follow',
                   fun: () {
+                    if (isGuestUser(context)) return;
                     Navigator.pop(context);
                     if (postViewModel.isFollowed) {
                       postViewModel.unFollowUser(userID: post?.user?.sId ?? '');

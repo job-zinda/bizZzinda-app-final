@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:biz_zinda/model/profile_model.dart';
+import 'package:biz_zinda/model/logged_in_user.dart';
 import '../utils/api_service.dart';
 import '../utils/api_url.dart';
 
@@ -32,8 +33,11 @@ class SearchViewModel with ChangeNotifier {
     }
 
     try {
+      final base = LoggedInUser.isGuest
+          ? '${Api.baseurl}/api/v1/store/public-stores'
+          : '${Api.baseurl}/api/v1/store/get-stores';
       final url =
-          '${Api.baseurl}/api/v1/store/get-stores?searchTag=${_searchTag.trim()}&pageNumber=$_pageNumber&pageSize=10';
+          '$base?searchTag=${_searchTag.trim()}&pageNumber=$_pageNumber&pageSize=10';
 
       print("STORE URL => $url");
 

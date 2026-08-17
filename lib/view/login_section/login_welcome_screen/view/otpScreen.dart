@@ -121,7 +121,10 @@ class _OtpScreenState extends State<OtpScreen> {
             EasyLoading.showSuccess("Login Successful");
 
             if (!mounted) return;
-            context.go('/');
+            Navigator.of(context).popUntil((route) => route.isFirst);
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) context.go('/');
+            });
           } else {
             EasyLoading.showError("Invalid user data");
           }

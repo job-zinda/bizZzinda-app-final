@@ -6,6 +6,7 @@ import 'package:biz_zinda/Settings/until/PImages.dart';
 import 'package:biz_zinda/Settings/until/PPages.dart';
 import 'package:biz_zinda/Settings/widgets/custom_elevated_button.dart';
 import 'package:biz_zinda/Settings/widgets/text_widget.dart';
+import 'package:biz_zinda/model/logged_in_user.dart';
 import 'otpScreen.dart';
 
 class LoginWelcomeScreenUi extends StatefulWidget {
@@ -17,8 +18,6 @@ class LoginWelcomeScreenUi extends StatefulWidget {
 
 class _LoginWelcomeScreenUiState extends State<LoginWelcomeScreenUi> {
   final TextEditingController emailController = TextEditingController();
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -34,13 +33,13 @@ class _LoginWelcomeScreenUiState extends State<LoginWelcomeScreenUi> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFFFB8C00),// Orange 500 (dark/top)
+              Color(0xFFFB8C00), // Orange 500 (dark/top)
               Color(0xFFFFB74D), // Orange 300 (light) // Light middle-top
               // Light middle-bottom
               // Bottom Dark Purple
             ],
           ),
-        ),// 80% opacity
+        ), // 80% opacity
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 17),
           child: SingleChildScrollView(
@@ -66,7 +65,8 @@ class _LoginWelcomeScreenUiState extends State<LoginWelcomeScreenUi> {
                     ),
                     SizedBox(height: 8),
                     textWidget(
-                      text: "Grow your business by connecting with customers nearby",
+                      text:
+                          "Grow your business by connecting with customers nearby",
                       fontsize: 16,
                       fontweight: FontWeight.normal,
                       color: Colors.black,
@@ -74,6 +74,23 @@ class _LoginWelcomeScreenUiState extends State<LoginWelcomeScreenUi> {
                   ],
                 ),
                 const SizedBox(height: 25),
+                // Continue as Guest Button
+                CustomElavatedTextButton(
+                  width: double.infinity,
+                  borderRadius: 18,
+                  borderColor: PColors.white,
+                  bgcolor: PColors.white,
+                  textColor: Colors.black,
+                  text: 'Continue as Guest',
+                  onPressed: () async {
+                    await LoggedInUser.guestLogin();
+                    if (context.mounted) {
+                      context.go('/home');
+                    }
+                  },
+                ),
+                const SizedBox(height: 20),
+
                 // Username & Password Button
                 CustomElavatedTextButton(
                   width: double.infinity,
@@ -83,7 +100,7 @@ class _LoginWelcomeScreenUiState extends State<LoginWelcomeScreenUi> {
                   textColor: Colors.black,
                   text: 'Continue with username & password',
                   onPressed: () {
-                    context.pushNamed(PPages.usernameLoginUi);
+                    context.goNamed(PPages.usernameLoginUi);
                   },
                 ),
                 const SizedBox(height: 20),
@@ -94,25 +111,28 @@ class _LoginWelcomeScreenUiState extends State<LoginWelcomeScreenUi> {
                   borderRadius: 18,
                   bgcolor: PColors.white,
                   borderColor: PColors.white,
-                  textColor:Colors.black,
+                  textColor: Colors.black,
                   text: 'Signup or Login  with Email',
                   onPressed: () {
                     showModalBottomSheet(
                       context: context,
                       isScrollControlled: true,
                       shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(20),
+                        ),
                       ),
                       builder: (context) {
                         final TextEditingController emailController =
-                        TextEditingController();
+                            TextEditingController();
 
                         return Padding(
                           padding: EdgeInsets.only(
                             left: 20,
                             right: 20,
                             top: 20,
-                            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+                            bottom:
+                                MediaQuery.of(context).viewInsets.bottom + 20,
                           ),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
@@ -135,8 +155,8 @@ class _LoginWelcomeScreenUiState extends State<LoginWelcomeScreenUi> {
                                   boxShadow: [
                                     BoxShadow(
                                       color: Colors.black12, // shadow color
-                                      blurRadius: 6,          // softness
-                                      offset: Offset(0, 3),   // x,y offset
+                                      blurRadius: 6, // softness
+                                      offset: Offset(0, 3), // x,y offset
                                     ),
                                   ],
                                 ),
@@ -146,12 +166,17 @@ class _LoginWelcomeScreenUiState extends State<LoginWelcomeScreenUi> {
                                   decoration: InputDecoration(
                                     hintText: "Enter email",
                                     filled: true,
-                                    fillColor: Colors.orange.shade100, // container already has color
+                                    fillColor: Colors
+                                        .orange
+                                        .shade100, // container already has color
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
                                       borderSide: BorderSide.none,
                                     ),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                    contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 14,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -168,12 +193,17 @@ class _LoginWelcomeScreenUiState extends State<LoginWelcomeScreenUi> {
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                   ),
-                                  child: const Text("Send OTP",style: TextStyle(color: Colors.black),),
+                                  child: const Text(
+                                    "Send OTP",
+                                    style: TextStyle(color: Colors.black),
+                                  ),
                                   onPressed: () {
                                     final email = emailController.text.trim();
 
                                     if (email.isEmpty || !email.contains("@")) {
-                                      EasyLoading.showError("Enter valid email");
+                                      EasyLoading.showError(
+                                        "Enter valid email",
+                                      );
                                       return;
                                     }
 
@@ -182,9 +212,8 @@ class _LoginWelcomeScreenUiState extends State<LoginWelcomeScreenUi> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => OtpScreen(
-                                          email: email,
-                                        ),
+                                        builder: (context) =>
+                                            OtpScreen(email: email),
                                       ),
                                     );
                                   },

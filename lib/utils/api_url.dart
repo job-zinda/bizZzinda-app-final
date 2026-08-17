@@ -229,4 +229,27 @@ class Api {
       "$baseurl/api/v1/profile-catalog/listProfileServices/$profileId";
   static String deleteMessage(String messageId) =>
       "$baseurl/api/v1/biz-chat/deleteMessage/$messageId";
+
+  // ------------------ Public (no-auth / guest) endpoints ------------------
+  static const publicFeedUrl = '$baseurl/api/v1/post/public-feed?pageSize=10';
+  static const publicOfferingsUrl =
+      '$baseurl/api/v1/offering/public-offerings?pageSize=10';
+  static const publicBannersUrl = '$baseurl/api/v1/banner/public-banners';
+  static const publicStoresUrl = '$baseurl/api/v1/store/public-stores?pageSize=10';
+  static const publicNearestStoresUrl =
+      '$baseurl/api/v1/store/public-nearest-stores?distanceInKm=50';
+  static String publicStoreDetailsUrl(String storeId) =>
+      "$baseurl/api/v1/store/public-store-details/$storeId";
+  static String publicOfferingDetailsUrl(String offeringId) =>
+      "$baseurl/api/v1/offering/public-offering-details/$offeringId";
+  static const publicProfilesUrl =
+      '$baseurl/api/v1/user/public-profiles?pageSize=10';
+  static const publicNearestProfilesUrl =
+      '$baseurl/api/v1/user/public-nearest-profiles';
+  static String publicProfileUrl(String profileId) =>
+      "$baseurl/api/v1/user/public-profile/$profileId";
+  static const publicProfileRatingsUrl =
+      '$baseurl/api/v1/user/public-profile-ratings';
+  static const publicProfilePostsUrl =
+      '$baseurl/api/v1/post/public-profile-posts?pageSize=10';
 }

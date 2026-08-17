@@ -17,11 +17,28 @@ class LoggedInUser {
   static List<String>? skills;
   static String? referralCode;
   static bool lastLoginWasEmailOtp = false;
+  static bool isGuest = false;
+  static String? whatsappNumber;
+  static String? contactNumber;
 
   // ------------------ Constructors ------------------
 
+  /// Guest login - browse without an account
+  static Future<void> guestLogin() async {
+    isGuest = true;
+    id = null;
+    accessToken = null;
+    refreshToken = null;
+    name = 'Guest';
+    whatsappNumber = null;
+    contactNumber = null;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('${_prefix}isGuest', true);
+  }
+
   /// Login constructor
   LoggedInUser.login(Map<String, dynamic> json) {
+    isGuest = false;
     id = json['user']['_id'];
     name = json['user']['name'];
     email = json['user']['email'];
@@ -35,12 +52,15 @@ class LoggedInUser {
     refreshToken = json['tokens']['refresh']['token'];
     lat = double.tryParse(json['user']['location']["coordinates"][0].toString() ?? '0');
     long = double.tryParse(json['user']['location']["coordinates"][1].toString() ?? '0');
+    whatsappNumber = json['user']['whatsappNumber'];
+    contactNumber = json['user']['contactNumber'];
 
     storeUserLocally();
   }
 
   /// Profile constructor
   LoggedInUser.profile(Map<String, dynamic> json) {
+    isGuest = false;
     id = json['_id'];
     name = json['name'];
     email = json['email'];
@@ -52,12 +72,15 @@ class LoggedInUser {
     referralCode = json['referralCode'] ?? '';
     lat = double.tryParse(json['location']?["coordinates"]?[0].toString() ?? '0');
     long = double.tryParse(json['location']?["coordinates"]?[1].toString() ?? '0');
+    whatsappNumber = json['whatsappNumber'];
+    contactNumber = json['contactNumber'];
 
     storeUserLocally();
   }
 
   /// Token update constructor
   LoggedInUser.tokenUpdate(Map<String, dynamic> json) {
+    isGuest = false;
     accessToken = json['access']['token'];
     refreshToken = json['refresh']['token'];
     storeUserLocally();
@@ -84,6 +107,8 @@ class LoggedInUser {
       await prefs.setDouble('${_prefix}lat', lat!);
       await prefs.setDouble('${_prefix}long', long!);
     }
+    await prefs.setString('${_prefix}whatsappNumber', whatsappNumber ?? '');
+    await prefs.setString('${_prefix}contactNumber', contactNumber ?? '');
   }
 
   /// Get user details from SharedPreferences
@@ -103,6 +128,9 @@ class LoggedInUser {
     lastLoginWasEmailOtp = prefs.getBool('${_prefix}lastLoginWasEmailOtp') ?? false;
     lat = prefs.getDouble('${_prefix}lat');
     long = prefs.getDouble('${_prefix}long');
+    isGuest = prefs.getBool('${_prefix}isGuest') ?? false;
+    whatsappNumber = prefs.getString('${_prefix}whatsappNumber');
+    contactNumber = prefs.getString('${_prefix}contactNumber');
   }
 
   /// Clear all biz_zinda data
@@ -122,10 +150,13 @@ class LoggedInUser {
     referralCode = null;
     lat = null;
     long = null;
+    whatsappNumber = null;
+    contactNumber = null;
+    isGuest = false;
 
     final keys = [
       'id','name','email','countryCode','phoneNumber','profilePic','coverImage',
-      'skills','referralCode','accessToken','refreshToken','lastLoginWasEmailOtp','lat','long'
+      'skills','referralCode','accessToken','refreshToken','lastLoginWasEmailOtp','lat','long','isGuest'
     ];
     for (var key in keys) {
       await prefs.remove('${_prefix}$key');

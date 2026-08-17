@@ -26,7 +26,14 @@ class _FreelancerBioPageUiState extends State<FreelancerBioPageUi> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ProfileViewModel>().fetchProfession();
+      final pvm = context.read<ProfileViewModel>();
+      pvm.fetchProfession();
+      if (pvm.profileModel?.contactNumber != null) {
+        pvm.contactNumberController.text = pvm.profileModel!.contactNumber!;
+      }
+      if (pvm.profileModel?.whatsappNumber != null) {
+        pvm.whatsappController.text = pvm.profileModel!.whatsappNumber!;
+      }
     });
   }
 
@@ -88,6 +95,14 @@ class _FreelancerBioPageUiState extends State<FreelancerBioPageUi> {
                   height: 14,
                 ),
                 mobileTextField(),
+                const SizedBox(
+                  height: 14,
+                ),
+                contactTextField(),
+                const SizedBox(
+                  height: 14,
+                ),
+                whatsappTextField(),
                 const SizedBox(
                   height: 14,
                 ),
@@ -379,6 +394,44 @@ class _FreelancerBioPageUiState extends State<FreelancerBioPageUi> {
               );
             }).toList(),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget contactTextField() {
+    return Consumer<ProfileViewModel>(
+      builder: (context, value, child) => CustomTextFeild(
+        controller: value.contactNumberController,
+        borderColor: const Color(0xFF8A4FFF),
+        borderRadius: 0,
+        filColor: PColors.white,
+        textHead: 'Call Contact Number (optional)',
+        textColor: const Color(0xFF8A4FFF),
+        hintText: 'Call contact number',
+        maxLength: 10,
+        keyboardType: TextInputType.phone,
+        inputFormatters: <TextInputFormatter>[
+          FilteringTextInputFormatter.digitsOnly
+        ],
+      ),
+    );
+  }
+
+  Widget whatsappTextField() {
+    return Consumer<ProfileViewModel>(
+      builder: (context, value, child) => CustomTextFeild(
+        controller: value.whatsappController,
+        borderColor: const Color(0xFF8A4FFF),
+        borderRadius: 0,
+        filColor: PColors.white,
+        textHead: 'WhatsApp Number (optional)',
+        textColor: const Color(0xFF8A4FFF),
+        hintText: 'WhatsApp number',
+        maxLength: 10,
+        keyboardType: TextInputType.phone,
+        inputFormatters: <TextInputFormatter>[
+          FilteringTextInputFormatter.digitsOnly
         ],
       ),
     );

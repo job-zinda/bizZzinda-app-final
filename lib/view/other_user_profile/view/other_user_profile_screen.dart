@@ -1,12 +1,13 @@
 import 'package:go_router/go_router.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:biz_zinda/utils/profile_share_helper.dart';
 import 'package:biz_zinda/Settings/until/PColors.dart';
 
 import 'package:biz_zinda/view/my_profile/view/widgets/gallery_section.dart';
 import 'package:biz_zinda/view/other_user_profile/view/widgets/other_user_profile_button.dart';
 import 'package:biz_zinda/view/other_user_profile/view/widgets/review_widget.dart';
 import 'package:biz_zinda/view_model/post_view_model.dart';
+import 'package:biz_zinda/utils/guest_helper.dart';
 import 'package:provider/provider.dart';
 
 import '../../my_profile/view/widgets/other_user_profile_head_ui.dart';
@@ -189,6 +190,7 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
               return PopupMenuButton<String>(
                 color: PColors.white,
                 onSelected: (val) {
+                  if (val != "share" && isGuestUser(context)) return;
                   if (val == "rating") {
                     showModalBottomSheet(
                       isScrollControlled: true,
@@ -204,21 +206,25 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
                     value.unblockUser(context, id: value.otherUser?.sId?.toString() ?? '');
                   } else if (val == "share") {
                     final userId = value.otherUser?.sId?.toString() ?? '';
-                    final userName = value.otherUser?.name ?? 'User';
+                    final userName = value.otherUser?.name;
+                    final profileImageUrl = value.otherUser?.profileImageUrl;
+
+                    if (userId.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Unable to share this profile')),
+                      );
+                      return;
+                    }
+
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Generating shareable link...'))
+                      const SnackBar(content: Text('Generating shareable link...')),
                     );
-                    final String webUrl = 'https://jobzinda.com/profile/$userId';
-                    const String playStoreUrl = 'https://play.google.com/store/apps/details?id=com.jobZinda.customers';
-                    const String appStoreUrl = 'https://apps.apple.com/app/job-zinda/id123456789';
-                    final String fallbackShareText = "🔍 Discover $userName on Job Zinda!\n\n"
-                        "👉 Tap the link to view their profile and connect:\n"
-                        "$webUrl\n\n"
-                        "💼 Find your next opportunity with Job Zinda!\n\n"
-                        "📱 Get the app:\n"
-                        "Android: $playStoreUrl\n"
-                        "iOS: $appStoreUrl";
-                    Share.share(fallbackShareText, subject: 'Check out this profile on Job Zinda!');
+
+                    shareProfile(
+                      userId: userId,
+                      userName: userName,
+                      profileImageUrl: profileImageUrl,
+                    );
                   }
                 },
                 itemBuilder: (BuildContext context) {
