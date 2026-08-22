@@ -450,44 +450,51 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   child: SizedBox(
                     height: 200,
                     width: double.infinity,
-                    child: bannerVM.topBanners.isNotEmpty
-                        ? PageView.builder(
-                      itemCount: bannerVM.topBanners.length,
-                      itemBuilder: (context, index) {
-                        final banner = bannerVM.topBanners[index];
-                        final imageUrl = banner.mediaUrl ?? banner.bannerImageUrl ?? "";
-                        if (imageUrl.isEmpty) {
-                          return ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Image.asset(
-                              'assets/images/homebanner2.jpeg',
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                            ),
+                    child: Consumer<BannerViewModel>(
+                      builder: (context, bVM, _) {
+                        if (bVM.topBanners.isNotEmpty) {
+                          return PageView.builder(
+                            itemCount: bVM.topBanners.length,
+                            itemBuilder: (context, index) {
+                              final banner = bVM.topBanners[index];
+                              final imageUrl = banner.mediaUrl ?? banner.bannerImageUrl ?? "";
+                              if (imageUrl.isEmpty) {
+                                return ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.asset(
+                                    'assets/images/homebanner2.jpeg',
+                                    fit: BoxFit.cover,
+                                    width: double.infinity,
+                                  ),
+                                );
+                              }
+                              return ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.network(
+                                  imageUrl,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) => ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.asset(
+                                      'assets/images/homebanner2.jpeg',
+                                      fit: BoxFit.cover,
+                                      width: double.infinity,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
                           );
                         }
-                        return Image.network(
-                          imageUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Image.asset(
-                              'assets/images/homebanner2.jpeg',
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                            ),
+                        return ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.asset(
+                            'assets/images/homebanner2.jpeg',
+                            fit: BoxFit.cover,
+                            width: double.infinity,
                           ),
                         );
                       },
-                    )
-                        // : HomeVideoBanner(),
-                        : ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.asset(
-                        'assets/images/homebanner2.jpeg',
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                      ),
                     ),
                   ),
                 ),
