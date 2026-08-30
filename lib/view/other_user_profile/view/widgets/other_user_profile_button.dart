@@ -207,7 +207,7 @@ class _OtherUserProfileButtonUiState extends State<OtherUserProfileButtonUi> {
                       launchWhatsAppChat(
                         wa,
                         postViewModel.otherUser?.countryCode,
-                        message: 'HI i found your offer in Biz Zinda',
+                        message: 'Hi , I found your profile in Biz Zinda',
                       );
                     } else {
                       isGuestUser(context);

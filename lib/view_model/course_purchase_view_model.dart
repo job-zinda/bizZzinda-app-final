@@ -43,7 +43,7 @@ class CoursePurchaseViewModel extends ChangeNotifier {
           'key': order['key_id'],
           'amount': order['amount'],
           'order_id': order['id'],
-          'name': 'Job Zinda',
+          'name': 'Biz Zinda',
           'description': 'Course Purchase',
         };
         razorpay.open(options);

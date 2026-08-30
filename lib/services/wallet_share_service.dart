@@ -6,7 +6,7 @@ class WalletShareService {
     required String referralCode,
   }) async {
     final message = '''
-This is my earnings from JobZinda 💚
+This is my earnings from Biz Zinda 💚
 Total Earned: ₹${totalEarnings.toStringAsFixed(0)}
 
 Anyone can join and earn!
@@ -15,12 +15,12 @@ Register using my referral code: $referralCode
 Let's grow together 🤝
 
 Download the app 👇
-https://play.google.com/store/apps/details?id=com.jobZinda.customers
+https://play.google.com/store/apps/details?id=com.biz_zinda.app
 ''';
 
     await Share.share(
       message,
-      subject: 'Join JobZinda & Earn 💚',
+      subject: 'Join Biz Zinda & Earn 💚',
     );
   }
 }

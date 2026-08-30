@@ -43,7 +43,7 @@ Future<void> launchPhoneCall(String? mobileNumber, String? countryCode) async {
 /// Shows a message instead when the profile has no number configured.
 Future<void> launchWhatsAppChat(
     String? mobileNumber, String? countryCode,
-    {String? message = 'HI i found your offer in Biz Zinda'}) async {
+    {String? message = 'Hi , I found your profile in Biz Zinda'}) async {
   final String number = internationalNumber(mobileNumber, countryCode);
   if (number.isEmpty) {
     EasyLoading.showInfo('This user has not configured a mobile number');
@@ -51,7 +51,7 @@ Future<void> launchWhatsAppChat(
   }
 
   final String encodedMessage =
-      Uri.encodeComponent(message ?? 'HI i found your offer in Biz Zinda');
+      Uri.encodeComponent(message ?? 'Hi , I found your profile in Biz Zinda');
   await _launch(
       Uri.parse('https://wa.me/$number?text=$encodedMessage'),
       'Could not open WhatsApp');
