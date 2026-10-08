@@ -1,283 +1,155 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:biz_zinda/Settings/until/PColors.dart';
-import 'package:biz_zinda/Settings/until/PImages.dart';
-import 'package:biz_zinda/view/connect_pages/map_section/view/widgets/result_sheet.dart';
-import 'package:biz_zinda/view_model/connect_page_view_model.dart';
-import 'package:biz_zinda/view_model/profile_view_model.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
-import 'package:biz_zinda/widgets/safe_cached_network_image.dart';
+import 'package:biz_zinda/view/connect_pages/map_section/view/widgets/profile_map_marker_widget.dart';
+import 'package:biz_zinda/view/other_user_profile/view/other_user_profile_screen.dart';
+import 'package:biz_zinda/view_model/connect_page_view_model.dart';
 
 class SimpleMap extends StatelessWidget {
   const SimpleMap({super.key});
 
-  // final List<LatLng> points = [
-  //   LatLng(8.5241, 76.9366), // San Francisco
-  //   LatLng(9.9312, 76.2673), // Los Angeles
-  //   LatLng(11.2588, 75.7804),  // New York
-  // ];
+  static const Color primaryOrange = Color(0xFFFB8C00);
+
+  String _calculateDistance(
+    double? userLat,
+    double? userLng,
+    double? targetLat,
+    double? targetLng,
+  ) {
+    if (userLat == null ||
+        userLng == null ||
+        targetLat == null ||
+        targetLng == null) {
+      return '0 km';
+    }
+    final double distanceInMeters =
+        Geolocator.distanceBetween(userLat, userLng, targetLat, targetLng);
+    final double distanceInKm = distanceInMeters / 1000;
+    if (distanceInKm < 1) {
+      return '${(distanceInKm * 1000).round()} m';
+    }
+    return '${distanceInKm.round()} km';
+  }
+
   @override
   Widget build(BuildContext context) {
     ConnectPageViewModel connectPageViewModel =
         context.watch<ConnectPageViewModel>();
-    ProfileViewModel profileViewModel = context.read<ProfileViewModel>();
-    print("profile:-${profileViewModel.profileModel}");
+
     return Consumer<ConnectPageViewModel>(
       builder: (context, value, child) {
         final double? lat = value.lat;
         final double? lng = value.lng;
         if (lat == null || lng == null) {
-          // Location not yet available – show a loader or placeholder.
-          return const Center(child: CircularProgressIndicator());
+          // Location not yet available - show a loader
+          return const Center(
+            child: CircularProgressIndicator(color: primaryOrange),
+          );
         }
+
+        final double? distanceRadiusKm =
+            double.tryParse(connectPageViewModel.distanceInKm);
+
         return FlutterMap(
           mapController: value.mapController,
           options: MapOptions(
             onMapReady: value.onMapReady,
-            initialCenter: LatLng(lat, lng), // safe
-            // initialCenter: LatLng(
-            //     profileViewModel.profileModel!.lat!.toDouble(),
-            //     profileViewModel.profileModel!.lng!
-            //         .toDouble()), // Updated parameter for initial center
-            initialZoom: 15 // Updated parameter for initial zoom
-            ),
-        children: [
-          TileLayer(
-            urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-            tileProvider: NetworkTileProvider(
-              headers: {
-                'User-Agent': 'jobzinda/1.0 (jobzinda@gmail.com)'
-              }
-            ),
-            subdomains: const ['a', 'b', 'c'],
-            // attributionBuilder: (_) {
-            //   return Text("© OpenStreetMap contributors");
-            // },
+            initialCenter: LatLng(lat, lng),
+            initialZoom: 11,
           ),
-          CircleLayer(
-            circles: [
-              CircleMarker(
-                  point: LatLng(value.lat!, value.lng!),
-                  radius:
-                      // connectPageViewModel.distanceInKm.isNotEmpty
-                      // ?
-                      double.parse(connectPageViewModel.distanceInKm) * 10,
-                  // : 1, // Radius in meters
-                  color:
-                      const Color.fromARGB(255, 170, 174, 176).withOpacity(0.1),
-                  borderStrokeWidth: 2,
-                  borderColor: PColors.mapCircleborder),
-            ],
-          ),
-          MarkerLayer(
+          children: [
+            TileLayer(
+              urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+              tileProvider: NetworkTileProvider(
+                headers: {'User-Agent': 'bizzinda/1.0 (bizzinda@gmail.com)'},
+              ),
+              subdomains: const ['a', 'b', 'c'],
+            ),
+            if (distanceRadiusKm != null && distanceRadiusKm > 0)
+              CircleLayer(
+                circles: [
+                  CircleMarker(
+                    point: LatLng(lat, lng),
+                    radius: distanceRadiusKm * 1000,
+                    useRadiusInMeter: true,
+                    color: primaryOrange.withValues(alpha: 0.04),
+                    borderStrokeWidth: 1.5,
+                    borderColor: primaryOrange.withValues(alpha: 0.25),
+                  ),
+                ],
+              ),
+            MarkerLayer(
               markers: connectPageViewModel.nearestStores
+                  .where((e) => e.lat != 0 && e.lng != 0)
                   .map(
-                    (e) => Marker(
-                        width: 60,
-                        height: 60,
-                        point: LatLng(e.lat!, e.lng!),
-                        child: GestureDetector(
+                    (e) {
+                      final distanceStr = _calculateDistance(
+                        lat,
+                        lng,
+                        e.lat,
+                        e.lng,
+                      );
+                      return Marker(
+                        width: 180,
+                        height: 74,
+                        point: LatLng(e.lat, e.lng),
+                        alignment: const Alignment(-0.74, 0.43),
+                        child: ProfileMapMarkerWidget(
+                          store: e,
+                          distanceStr: distanceStr,
                           onTap: () {
-                            showModalBottomSheet(
-                              // shape: Border(),
-                              isScrollControlled: true,
-                              context: context,
-                              builder: (context) => ResultSheetUi(),
-                            );
+                            if (e.id.isNotEmpty) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      OtherUserProfileScreen(userId: e.id),
+                                ),
+                              );
+                            }
                           },
-                          child: ClipOval(
-                            child: SafeCachedNetworkImage(
-                              imageUrl: e.profileImageUrl,
-                              width: 50,
-                              height: 50,
-                              fit: BoxFit.cover,
-                              // Resize the image to a thumbnail to save GPU memory.
-                              memCacheWidth: 150,
-                              memCacheHeight: 150,
-                            ),
-                          ),
-                        )),
+                        ),
+                      );
+                    },
                   )
-                  .toList()),
-
-          // MarkerLayer(
-          //   markers: points.map((point) {
-          //     return Marker(
-          //       point: point,
-          //       width: 50, // Width of the image
-          //       height: 50, // Height of the image
-          //       child: GestureDetector(
-          //         onTap: () {
-          //           // Handle marker tap
-          //           print("Marker at $point tapped!");
-          //         },
-          //         child: Image.asset(PImages.profile), // Custom image
-          //       ),
-          //     );
-          //   }).toList(),
-          // ),
-          MarkerLayer(markers: [
-            Marker(
-                point:
-                    LatLng(value.lat!, value.lng!), // Location for the marker
-                // width: 80.0,
-                // height: 80.0,
-
-                child: CircleAvatar(
-                  radius: 10,
-                  backgroundColor: PColors.black.withOpacity(0.2),
-                  child: CircleAvatar(
-                    radius: 8,
-                    backgroundColor: PColors.white,
-                    child: CircleAvatar(
-                      radius: 6,
-                      backgroundColor: PColors.black,
+                  .toList(),
+            ),
+            // User's own GPS current location indicator (Orange)
+            MarkerLayer(
+              markers: [
+                Marker(
+                  point: LatLng(lat, lng),
+                  width: 28,
+                  height: 28,
+                  alignment: Alignment.center,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: primaryOrange.withValues(alpha: 0.2),
+                    ),
+                    padding: const EdgeInsets.all(4),
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white,
+                      ),
+                      padding: const EdgeInsets.all(2),
+                      child: Container(
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: primaryOrange,
+                        ),
+                      ),
                     ),
                   ),
-                )),
-          ])
-        ],
-      ); // closes FlutterMap
-    }, // end builder
-  ); // closes Consumer
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
   }
 }
-// class SimpleMap extends StatefulWidget {
-//   const SimpleMap({super.key});
-
-//   @override
-//   _SimpleMapState createState() => _SimpleMapState();
-// }
-
-// class _SimpleMapState extends State<SimpleMap> {
-//   double _zoomLevel = 15; // Initial zoom level
-
-//   @override
-//   Widget build(BuildContext context) {
-//     ConnectPageViewModel connectPageViewModel =
-//         context.watch<ConnectPageViewModel>();
-//     ProfileViewModel profileViewModel = context.read<ProfileViewModel>();
-
-//     return Consumer<ConnectPageViewModel>(
-//       builder: (context, value, child) => FlutterMap(
-//         mapController: value.mapController,
-//         options: MapOptions(
-//           onMapReady: value.onMapReady,
-//           initialCenter: LatLng(value.lat!, value.lng!),
-//           initialZoom: _zoomLevel, // Set initial zoom level
-//           onPositionChanged: (position, hasGesture) {
-//             setState(() {
-//               _zoomLevel = position.zoom; // Update the zoom level
-//             });
-//           },
-//         ),
-//         children: [
-//           TileLayer(
-//             urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-//             userAgentPackageName: "com.example.app",
-//             subdomains: const ['a', 'b', 'c'],
-//           ),
-//           CircleLayer(
-//             circles: [
-//               CircleMarker(
-//                 point: LatLng(value.lat!, value.lng!),
-//                 radius:
-//                     _calculateRadiusInPixels(connectPageViewModel.distanceInKm),
-//                 color:
-//                     Color.fromARGB(128, 170, 174, 176), // Semi-transparent grey
-//                 borderStrokeWidth: 2,
-//                 borderColor:
-//                     Color.fromARGB(255, 170, 174, 176), // Solid grey border
-//               ),
-//             ],
-//           ),
-//           MarkerLayer(
-//             markers: connectPageViewModel.nearestProfiles
-//                 .map(
-//                   (e) => Marker(
-//                     width: 60,
-//                     height: 60,
-//                     point: LatLng(e.lat!, e.lng!),
-//                     child: GestureDetector(
-//                       onTap: () {
-//                         showModalBottomSheet(
-//                           isScrollControlled: true,
-//                           context: context,
-//                           builder: (context) => ResultSheetUi(),
-//                         );
-//                       },
-//                       child: CircleAvatar(
-//                         radius: 25,
-//                         backgroundColor:
-//                             const Color.fromARGB(255, 153, 220, 229),
-//                         child: CircleAvatar(
-//                           radius: 26,
-//                           backgroundColor: PColors.black,
-//                           backgroundImage: e.profileImageUrl!.isEmpty
-//                               ? AssetImage(PImages.profile)
-//                               : NetworkImage(e.profileImageUrl!),
-//                         ),
-//                       ),
-//                     ),
-//                   ),
-//                 )
-//                 .toList(),
-//           ),
-//           MarkerLayer(
-//             markers: [
-//               Marker(
-//                 point: LatLng(value.lat!, value.lng!),
-//                 child: CircleAvatar(
-//                   radius: 10,
-//                   backgroundColor: PColors.black.withOpacity(0.2),
-//                   child: CircleAvatar(
-//                     radius: 8,
-//                     backgroundColor: PColors.white,
-//                     child: CircleAvatar(
-//                       radius: 6,
-//                       backgroundColor: PColors.black,
-//                     ),
-//                   ),
-//                 ),
-//               ),
-//             ],
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-
-// double _calculateRadiusInPixels(String distanceInKm) {
-//   double km = double.parse(distanceInKm); // Convert km to a double
-//   double meters = km * 1000; // Convert km to meters
-
-//   // Define the scale factor to control how the radius scales on the map
-//   double pixelsPerMeter = _metersToPixelsAtZoom(_zoomLevel); // Convert meters to pixels based on zoom
-
-//   // Adjust the radius to ensure it doesn't scale too drastically
-//   // Scaling factor is applied to prevent the circle from growing too large
-//   double radiusInPixels = meters * pixelsPerMeter / 1000;  // Convert meters to pixels
-
-//   // Optionally, adjust scaling factor based on zoom level to control maximum size
-//   double maxRadiusInPixels = 1000; // Example: maximum circle size in pixels, adjustable
-//   radiusInPixels = radiusInPixels < maxRadiusInPixels ? radiusInPixels : maxRadiusInPixels;
-
-//   print("Calculated radius: $radiusInPixels pixels");
-
-//   return radiusInPixels;
-// }
-
-
-
-//   double _metersToPixelsAtZoom(double zoomLevel) {
-//     // Use floor or toInt to cast zoomLevel to an integer for bit shifting
-//     int zoomInt = zoomLevel.toInt(); // Convert zoomLevel to an integer
-
-//     const double earthCircumference = 40075017; // meters at the equator
-//     double scale = earthCircumference /
-//         (256 * (1 << zoomInt)); // Calculate scale in pixels per meter
-
-//     return scale;
-//   }
-// }

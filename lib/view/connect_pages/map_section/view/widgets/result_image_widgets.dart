@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:biz_zinda/Settings/until/PColors.dart';
 import 'package:biz_zinda/Settings/until/PImages.dart';
-import 'package:biz_zinda/model/profile_model.dart';
 
 import '../../../../store_location/store_model.dart';
 

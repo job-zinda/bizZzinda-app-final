@@ -14,17 +14,18 @@ class StoreModel {
     required this.lng,
     this.profileImageUrl,
     required this.profession,
+    this.coverImage,
   });
 
   factory StoreModel.fromJson(Map<String, dynamic> json) {
     return StoreModel(
-      id: json['_id'],
+      id: json['_id']?.toString() ?? '',
       name: json['name'] ?? '',
       lat: (json['lat'] ?? 0).toDouble(),
       lng: (json['lng'] ?? 0).toDouble(),
       profileImageUrl: json['profileImageUrl'],
       profession: json['profession'] ?? '',
-
+      coverImage: json['coverImage'],
     );
   }
 }

@@ -2,17 +2,16 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_map/flutter_map.dart';
-
 import 'package:latlong2/latlong.dart';
 
+import '../model/logged_in_user.dart';
 import '../utils/api_service.dart';
 import '../utils/api_url.dart';
 import 'package:biz_zinda/view/store_location/store_model.dart';
 
 class ConnectPageViewModel extends ChangeNotifier {
-
   final MapController mapController = MapController();
-  String distanceInKm = "10";
+  String distanceInKm = "All"; // Default to "All" to show all stores by default
   String searchTag = "";
 
   String gender = "";
@@ -23,7 +22,7 @@ class ConnectPageViewModel extends ChangeNotifier {
   double? lat;
   double? lng;
 
-  updateDistanceInKm(String disKm) {
+  void updateDistanceInKm(String disKm) {
     distanceInKm = disKm;
     notifyListeners();
     fetchNearestStores();
@@ -31,9 +30,9 @@ class ConnectPageViewModel extends ChangeNotifier {
 
   void _zoomToTarget() {
     Future.delayed(const Duration(milliseconds: 100), () {
-      if (isMapReady) {
+      if (isMapReady && lat != null && lng != null) {
         mapController.move(LatLng(lat!, lng!), 10);
-      } 
+      }
     });
   }
 
@@ -42,47 +41,44 @@ class ConnectPageViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  clear() {
-    distanceInKm = "10";
+  void clear() {
+    distanceInKm = "All";
     searchTag = "";
     gender = "";
     handledProjectsCountFrom = "";
     projects = "";
-    // lat=navigatorKey.currentContext!.read<ProfileViewModel>().profileModel.lat!;
-    // lng=navigatorKey.currentContext!.read<ProfileViewModel>().profileModel.lng!;
-
     rating = "";
     notifyListeners();
     fetchNearestStores();
   }
 
-  updateSearchTag(String search) {
+  void updateSearchTag(String search) {
     searchTag = search;
     notifyListeners();
     fetchNearestStores();
   }
 
-  updateDistanceInKm2(String disKm) {
+  void updateDistanceInKm2(String disKm) {
     distanceInKm = disKm;
     notifyListeners();
   }
 
-  updateGender(String gen) {
+  void updateGender(String gen) {
     gender = gen;
     notifyListeners();
     fetchNearestStores();
   }
 
-  updateLocation(double? lattude, double? longitude) {
+  void updateLocation(double? lattude, double? longitude) {
     lat = lattude;
     lng = longitude;
-    print("my lat----$lat---$lng");
+    debugPrint("Map location updated: lat=$lat, lng=$lng");
     fetchNearestStores();
     _zoomToTarget();
     notifyListeners();
   }
 
-  updateHandledProjectsCountFrom(String pro) {
+  void updateHandledProjectsCountFrom(String pro) {
     projects = pro;
     handledProjectsCountFrom = projects == "Any"
         ? "0"
@@ -94,7 +90,7 @@ class ConnectPageViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  updateRating(String rate) {
+  void updateRating(String rate) {
     rating = rate;
     notifyListeners();
   }
@@ -107,18 +103,35 @@ class ConnectPageViewModel extends ChangeNotifier {
     EasyLoading.show();
 
     try {
-      Response response = await ApiService().get(
-        '${Api.baseurl}/api/v1/store/get-nearest-stores?lat=$lat&lng=$lng',
-      );
+      final endpoint = LoggedInUser.isGuest
+          ? '/api/v1/store/public-nearest-stores'
+          : '/api/v1/store/get-nearest-stores';
+
+      final queryParams = <String, String>{
+        'lat': lat.toString(),
+        'lng': lng.toString(),
+        'pageSize': '100',
+      };
+
+      if (distanceInKm.isNotEmpty && distanceInKm.toLowerCase() != 'all') {
+        queryParams['distanceInKm'] = distanceInKm;
+      }
+
+      if (searchTag.trim().isNotEmpty) {
+        queryParams['searchTag'] = searchTag.trim();
+      }
+
+      final uri = Uri.parse('${Api.baseurl}$endpoint')
+          .replace(queryParameters: queryParams);
+
+      Response response = await ApiService().get(uri.toString());
 
       if (response.statusCode == 200) {
         Map<String, dynamic> data = response.data;
 
         if (data['status'] == true) {
           List list = data['data']['profiles'] ?? [];
-
-          nearestStores =
-              list.map((e) => StoreModel.fromJson(e)).toList();
+          nearestStores = list.map((e) => StoreModel.fromJson(e)).toList();
         } else {
           nearestStores.clear();
         }
@@ -126,9 +139,10 @@ class ConnectPageViewModel extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      print("Error: $e");
+      debugPrint("Error in fetchNearestStores: $e");
     }
 
     EasyLoading.dismiss();
   }
 }
+

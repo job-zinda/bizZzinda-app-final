@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:biz_zinda/Settings/until/PPages.dart';
-import 'package:biz_zinda/Settings/widgets/text_widget.dart';
 import 'package:biz_zinda/Settings/widgets/verified_text.dart';
 import 'package:biz_zinda/model/profile_model.dart';
 import 'package:biz_zinda/view/my_profile/view/widgets/profile_image_widget.dart';
@@ -13,317 +12,322 @@ class OtherUserProfileHeadUi extends StatefulWidget {
   const OtherUserProfileHeadUi({super.key});
 
   @override
-  State<OtherUserProfileHeadUi> createState() =>
-      _OtherUserProfileHeadUiState();
+  State<OtherUserProfileHeadUi> createState() => _OtherUserProfileHeadUiState();
 }
 
-class _OtherUserProfileHeadUiState
-    extends State<OtherUserProfileHeadUi> {
-
+class _OtherUserProfileHeadUiState extends State<OtherUserProfileHeadUi> {
   bool showAllSkills = false;
 
   @override
   Widget build(BuildContext context) {
-    PostViewModel postViewModel =
-    context.watch<PostViewModel>();
-    ProfileModel? profileModel =
-        postViewModel.otherUser;
+    final postViewModel = context.watch<PostViewModel>();
+    final ProfileModel? profileModel = postViewModel.otherUser;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         ProfileImageWidget(profileModel: profileModel),
         Container(
-          margin: const EdgeInsets.symmetric(
-              horizontal: 17, vertical: 10),
+          margin: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
           child: contentWidget(context, profileModel),
-        )
+        ),
       ],
     );
   }
 
-  Widget contentWidget(
-      BuildContext context, ProfileModel? profile) {
+  Widget contentWidget(BuildContext context, ProfileModel? profile) {
+    final skills = profile?.skills ?? [];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-
-        /// 🔹 Name + Followers/Feedback
+        // 🔹 Name & Profession Header
         Row(
-          mainAxisAlignment:
-          MainAxisAlignment.spaceBetween,
-          crossAxisAlignment:
-          CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-
             Expanded(
               child: Column(
-                crossAxisAlignment:
-                CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   VerifiedText(
                     text: profile?.name ?? '',
-                    isVerified:
-                    profile?.isVerified ?? false,
+                    isVerified: profile?.isVerified ?? false,
                     style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                      color:  Color(0xFFFB8C00),
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1E293B),
+                      letterSpacing: -0.3,
                     ),
                     maxLines: 1,
                   ),
-                  const SizedBox(height: 4),
-                  textWidget(
-                    text: profile?.profession ?? '',
-                    fontsize: 14,
-                    fontweight: FontWeight.w300,
-                    color:
-                    const  Color(0xFFFB8C00),
-                  ),
+                  if ((profile?.profession ?? '').isNotEmpty) ...[
+                    const SizedBox(height: 3),
+                    Text(
+                      profile!.profession!,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF64748B),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ],
               ),
-            ),
-
-            Row(
-              children: [
-                InkWell(
-                  onTap: () {
-                    ProfileViewModel profileViewModel =
-                    context.read<ProfileViewModel>();
-
-                    profileViewModel.currentPage = 0;
-                    profileViewModel.initFollowersPagination(
-                        id: profile!.sId ?? "");
-
-                    context.pushNamed(
-                      PPages.followersScreen,
-                      pathParameters: {'profileId': profile.sId!},
-                    );
-                  },
-                child:   columnWidget(
-                    title: 'Followers',
-                    value: '${profile?.followersCount ?? '0'}',
-                    color: const Color(0xFFFB8C00),
-                  ),
-                ),
-                // columnWidget(
-                //   title: 'Followers',
-                //  color: Color(0xFFFB8C00),
-                //   value:
-                //   '${profile?.followersCount ?? '0'}',
-                // ),
-                const SizedBox(width: 20),
-                InkWell(
-                  onTap: () {
-                    ProfileViewModel profileViewModel =
-                    context.read<ProfileViewModel>();
-
-                    profileViewModel.currentPage = 0;
-                    profileViewModel.initFeedbackPagination(
-                        id: profile!.sId ?? "");
-
-                    context.pushNamed(
-                      PPages.feedbackScreen,
-                      pathParameters: {'profileId': profile.sId!},
-                    );
-                  },
-                  child: columnWidget(
-                    title: 'Feedback',
-                    value: profile?.rating?.toStringAsFixed(1) ?? '0',
-                    color: const Color(0xFFFB8C00),
-                  ),
-                ),
-                // columnWidget(
-                //   title: 'Feedback',
-                //  color:  Color(0xFFFB8C00),
-                //   value: profile?.rating
-                //       ?.toStringAsFixed(1) ??
-                //       '0',
-                // ),
-              ],
             ),
           ],
         ),
 
-        const SizedBox(height: 10),
-
-        /// 🔹 Bio
-        textWidget(
-          color: const  Color(0xFFFB8C00),
-          text: profile?.bio ?? '',
-          fontsize: 13,
-        ),
-
-        const SizedBox(height: 18),
-
-        /// 🔹 Skills Section
-        if (profile?.skills?.isNotEmpty == true)
-          Column(
-            crossAxisAlignment:
-            CrossAxisAlignment.start,
+        // 🔹 Followers & Feedback Stats Card
+        Container(
+          margin: const EdgeInsets.only(top: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFF7ED),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFFFFEDD5)),
+          ),
+          child: Row(
             children: [
+              // Followers Stat
+              Expanded(
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(10),
+                  onTap: () {
+                    final profileViewModel = context.read<ProfileViewModel>();
+                    profileViewModel.currentPage = 0;
+                    profileViewModel.initFollowersPagination(
+                      id: profile?.sId ?? "",
+                    );
 
-              const Text(
-                "My Products/Servieses",
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color:  Color(0xFFFB8C00),
+                    context.pushNamed(
+                      PPages.followersScreen,
+                      pathParameters: {'profileId': profile?.sId ?? ""},
+                    );
+                  },
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(7),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFB8C00).withValues(alpha: 0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.people_alt_rounded,
+                          size: 18,
+                          color: Color(0xFFFB8C00),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${profile?.followersCount ?? 0}',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF1E293B),
+                            ),
+                          ),
+                          const Text(
+                            'Followers',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF64748B),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
 
-              const SizedBox(height: 12),
-
-              /// 👇 Show Only 2 or All
-              Column(
-                crossAxisAlignment:
-                CrossAxisAlignment.start,
-                children: (showAllSkills
-                    ? profile!.skills!
-                    : profile!.skills!.take(2))
-                    .map((skill) {
-                  return Padding(
-                    padding: const EdgeInsets.only(
-                        bottom: 10),
-                    child: Container(
-                      padding:
-                      const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            const  Color(0xFFFB8C00)
-                                .withOpacity(0.15),
-                            const  Color(0xFFFB8C00)
-                                .withOpacity(0.05),
-                          ],
-                        ),
-                        borderRadius:
-                        BorderRadius.circular(25),
-                        border: Border.all(
-                          color:
-                          const  Color(0xFFFB8C00)
-                              .withOpacity(0.2),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize:
-                        MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.star,
-                            size: 14,
-                            color:
-                            Color(0xFFFB8C00),
-                          ),
-                          const SizedBox(
-                              width: 6),
-                          Text(
-                            skill,
-                            style:
-                            const TextStyle(
-                              fontSize: 13,
-                              color:  Color(0xFFFB8C00),
-                              fontWeight:
-                              FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }).toList(),
+              // Vertical Divider
+              Container(
+                height: 32,
+                width: 1,
+                color: const Color(0xFFFFEDD5),
               ),
 
-              /// 🔹 Styled More Button
-              if (profile!.skills!.length > 2)
-                Center(
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        showAllSkills =
-                        !showAllSkills;
-                      });
-                    },
-                    child: Container(
-                      margin:
-                      const EdgeInsets.only(
-                          top: 5),
-                      padding:
-                      const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 6,
-                      ),
-                      decoration:
-                      BoxDecoration(
-                        color: const  Color(0xFFFB8C00)
-                            .withOpacity(0.1),
-                        borderRadius:
-                        BorderRadius.circular(
-                            20),
-                        border: Border.all(
-                          color: const  Color(0xFFFB8C00).withOpacity(0.3),
+              // Feedback Stat
+              Expanded(
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(10),
+                  onTap: () {
+                    final profileViewModel = context.read<ProfileViewModel>();
+                    profileViewModel.currentPage = 0;
+                    profileViewModel.initFeedbackPagination(
+                      id: profile?.sId ?? "",
+                    );
+
+                    context.pushNamed(
+                      PPages.feedbackScreen,
+                      pathParameters: {'profileId': profile?.sId ?? ""},
+                    );
+                  },
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(7),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFB8C00).withValues(alpha: 0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.star_rounded,
+                          size: 18,
+                          color: Color(0xFFFB8C00),
                         ),
                       ),
-                      child: Row(
-                        mainAxisSize:
-                        MainAxisSize.min,
+                      const SizedBox(width: 10),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            showAllSkills
-                                ? "Show Less"
-                                : "+ ${profile.skills!.length - 2} More",
-                            style:
-                            const TextStyle(
-                              fontSize: 13,
-                              fontWeight:
-                              FontWeight.w600,
-                              color:  Color(0xFFFB8C00),
+                            profile?.rating?.toStringAsFixed(1) ?? '0.0',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF1E293B),
                             ),
                           ),
-                          const SizedBox(
-                              width: 4),
-                          Icon(
-                            showAllSkills
-                                ? Icons
-                                .keyboard_arrow_up
-                                : Icons
-                                .keyboard_arrow_down,
-                            size: 18,
-                            color: const  Color(0xFFFB8C00),
+                          const Text(
+                            'Feedback',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF64748B),
+                            ),
                           ),
                         ],
                       ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // 🔹 Bio Section
+        if ((profile?.bio ?? '').isNotEmpty) ...[
+          const SizedBox(height: 14),
+          Text(
+            profile!.bio!,
+            style: const TextStyle(
+              fontSize: 13.5,
+              height: 1.45,
+              color: Color(0xFF475569),
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+        ],
+
+        // 🔹 Products & Services Section
+        if (skills.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          const Text(
+            "Products & Services",
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1E293B),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              ...((showAllSkills ? skills : skills.take(3)).map((skill) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 7,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF7ED),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFFFFEDD5)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.star_rounded,
+                        size: 14,
+                        color: Color(0xFFFB8C00),
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        skill,
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          color: Color(0xFF9A3412),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              })),
+
+              // Show More / Show Less Toggle
+              if (skills.length > 3)
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      showAllSkills = !showAllSkills;
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: const Color(0xFFFB8C00),
+                        width: 1.2,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          showAllSkills
+                              ? "Show Less"
+                              : "+ ${skills.length - 3} More",
+                          style: const TextStyle(
+                            color: Color(0xFFFB8C00),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12.5,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          showAllSkills
+                              ? Icons.keyboard_arrow_up
+                              : Icons.keyboard_arrow_down,
+                          size: 16,
+                          color: const Color(0xFFFB8C00),
+                        ),
+                      ],
                     ),
                   ),
                 ),
             ],
           ),
-      ],
-    );
-  }
-
-  Widget columnWidget({
-    required String title,
-    required String value,
-    required  Color color,
-  }) {
-    return Column(
-      children: [
-        textWidget(
-          text: value,
-          fontsize: 16,
-          fontweight: FontWeight.w500,
-        ),
-        const SizedBox(height: 4),
-        textWidget(
-          text: title,
-          fontsize: 14,
-          fontweight: FontWeight.w300,
-          color: const  Color(0xFFFB8C00),
-        ),
+        ],
       ],
     );
   }

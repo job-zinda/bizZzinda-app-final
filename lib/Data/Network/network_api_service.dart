@@ -99,7 +99,7 @@ class NetworkApiService implements BaseApiService {
   }) async {
     try {
       var newEndPoint = appned == null ? endPoint : "$endPoint/$appned";
-      var uri = Uri.parse("${AppUrl.scurity}://${AppUrl.baseurl}/$newEndPoint");
+      var uri = Uri.parse("${AppUrl.baseurl}/$newEndPoint");
 
       Response? response = await http.put(
         uri,
@@ -134,7 +134,7 @@ class NetworkApiService implements BaseApiService {
   }) async {
     try {
       var newEndPoint = appned == null ? endPoint : "$endPoint/$appned";
-      var uri = Uri.parse("${AppUrl.scurity}://${AppUrl.baseurl}/$newEndPoint");
+      var uri = Uri.parse("${AppUrl.baseurl}/$newEndPoint");
 
       Response? response = await http.delete(
         uri,
@@ -170,9 +170,9 @@ class NetworkApiService implements BaseApiService {
       }
       dio.FormData form = dio.FormData.fromMap(body);
       final url = isHttps
-          ? Uri.https(domain ?? AppUrl.baseurl, endpoints)
+          ? Uri.https(domain ?? AppUrl.httpBaseUrl, endpoints)
           : Uri.http(
-              domain ?? AppUrl.baseurl,
+              domain ?? AppUrl.httpBaseUrl,
               endpoints,
             );
       doo.options.headers = _mergedheaders(headers, token);
@@ -212,9 +212,9 @@ class NetworkApiService implements BaseApiService {
       }
       dio.FormData form = dio.FormData.fromMap(body);
       final url = isHttps
-          ? Uri.https(domain ?? AppUrl.baseurl, endpoints)
+          ? Uri.https(domain ?? AppUrl.httpBaseUrl, endpoints)
           : Uri.http(
-              domain ?? AppUrl.baseurl,
+              domain ?? AppUrl.httpBaseUrl,
               endpoints,
             );
       doo.options.headers = _mergedheaders(headers, token);
@@ -242,9 +242,9 @@ class NetworkApiService implements BaseApiService {
       dio.Dio doo = dio.Dio();
       dio.FormData form = dio.FormData.fromMap(body);
       final url = isHttps
-          ? Uri.https(domain ?? AppUrl.baseurl, endpoints)
+          ? Uri.https(domain ?? AppUrl.httpBaseUrl, endpoints)
           : Uri.http(
-              domain ?? AppUrl.baseurl,
+              domain ?? AppUrl.httpBaseUrl,
               endpoints,
             );
       doo.options.headers = _mergedheaders(headers, token);
@@ -272,9 +272,9 @@ class NetworkApiService implements BaseApiService {
     isHttps = AppUrl.isProduction;
     try {
       final url = isHttps
-          ? Uri.https(domain ?? AppUrl.baseurl, endpoints)
+          ? Uri.https(domain ?? AppUrl.httpBaseUrl, endpoints)
           : Uri.http(
-              domain ?? AppUrl.baseurl,
+              domain ?? AppUrl.httpBaseUrl,
               endpoints,
             );
       // Create a multipart request

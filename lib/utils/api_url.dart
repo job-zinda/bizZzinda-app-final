@@ -1,17 +1,14 @@
 import '../model/logged_in_user.dart';
 
 class AppUrl {
-  static const String scurity = 'https';
+  static String get scurity => isProduction ? 'https' : 'http';
 
-   static const isProduction = true;
-  // For local development, set to false and use your LAN IP below:
-  // static const isProduction = false;
+  // Set to false for local development, true for production:
+  static const isProduction = true;
 
   static String get baseurl {
     if (isProduction == false) {
-      return "http://192.168.1.12:4001";
-// <-- Local backend for development via adb reverse
-    //   return "http://ec2-3-110-26-51.ap-south-1.compute.amazonaws.com:4001";
+      return "http://localhost:4001"; // <-- Local backend on your machine
     } else {
       return "https://server2.jobzinda.com"; // <-- Production backend
     }
@@ -19,10 +16,9 @@ class AppUrl {
 
   static String get httpBaseUrl {
     if (isProduction == false) {
-     return '192.168.1.12:4001'; // <-- Local backend for development via adb reverse
-    //   return 'ec2-3-110-26-51.ap-south-1.compute.amazonaws.com:4001';
+      return 'localhost:4001'; // <-- Local backend host:port
     } else {
-      return 'server2.jobzinda.com'; // <-- Production backend
+      return 'server2.jobzinda.com'; // <-- Production backend host
     }
   }
 
@@ -50,12 +46,10 @@ class Api {
     return {'Authorization': 'Bearer ${LoggedInUser.accessToken}'};
   }
 
-   // static const baseurl = 'http://3.110.26.51:4001';
-   static const baseurl = 'https://server2.jobzinda.com';
-  // For local dev, use:
-  // static const baseurl = 'http://192.168.1.12:4001';
-  // <-- Local backend for development via adb reverse
-//   static const baseurl = 'http://ec2-3-110-26-51.ap-south-1.compute.amazonaws.com:4001'; // <-- Local backend for development
+  // Local development backend URL:
+  // static const baseurl = 'http://localhost:4001';
+  // Production backend URL:
+  static const baseurl = 'https://server2.jobzinda.com';
   static const storiesListUrl =
       '$baseurl/api/v1/story/listStories?pageLimit=10';
   static const suggestedPostsListUrl =

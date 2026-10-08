@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:biz_zinda/widgets/safe_cached_network_image.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:biz_zinda/Settings/until/PColors.dart';
 import 'package:biz_zinda/Settings/until/PImages.dart';
 import 'package:biz_zinda/Settings/until/PPages.dart';
 import 'package:biz_zinda/Settings/until/PSvgs.dart';
@@ -13,145 +11,224 @@ import 'package:biz_zinda/view_model/profile_analytics_view_model.dart';
 import 'package:biz_zinda/view_model/profile_view_model.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../view_model/file_view_model.dart';
-
 class ProfileImageWidget extends StatelessWidget {
   final String? icon;
   final ProfileModel? profileModel;
-  const ProfileImageWidget(
-      {super.key,  this.icon, required this.profileModel});
+
+  const ProfileImageWidget({
+    super.key,
+    this.icon,
+    required this.profileModel,
+  });
 
   @override
   Widget build(BuildContext context) {
     context.watch<ProfileViewModel>();
-    Size size = MediaQuery.of(context).size;
-    double coverHeight = size.height * 0.21;
-    double profileHeight = 75;
-    return buildCoverImage(coverHeight, profileHeight, context);
-  }
+    final Size size = MediaQuery.of(context).size;
+    final double coverHeight = size.height * 0.19;
+    const double avatarRadius = 44.0;
 
-  Widget buildCoverImage(
-    double coverHeight, double profileHeight, BuildContext context) {
-  return Stack(
-    clipBehavior: Clip.none,
-    alignment: Alignment.center,
-    children: [
-      Container(
-        margin: EdgeInsets.only(bottom: profileHeight / 1.4),
-        child: Stack(
-          children: [
-            SizedBox(
-              height: coverHeight,
-              width: double.infinity,
-              child: profileModel?.coverImage?.isEmpty ?? true
-                  ? Container(
-                      color: Colors.black,
-                      child: Center(
-                        child: Text(
-                          "No cover image",
-                          style: TextStyle(color: PColors.white),
+    final String coverUrl = profileModel?.coverImage ?? '';
+    final bool hasCoverImage = coverUrl.isNotEmpty;
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        // 🔹 Cover Banner
+        Container(
+          margin: const EdgeInsets.only(bottom: avatarRadius * 0.8),
+          height: coverHeight,
+          width: double.infinity,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (hasCoverImage)
+                SafeCachedNetworkImage(
+                  imageUrl: coverUrl,
+                  fit: BoxFit.cover,
+                )
+              else
+                // Elegant brand gradient background when no cover image is uploaded
+                Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFFFB8C00), Color(0xFFFFAB40), Color(0xFFFFE0B2)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        right: -30,
+                        top: -30,
+                        child: Container(
+                          width: 140,
+                          height: 140,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withValues(alpha: 0.15),
+                          ),
                         ),
                       ),
-                    )
-                  : SafeCachedNetworkImage(
-                      imageUrl: profileModel?.coverImage,
-                      fit: BoxFit.cover,
+                      Positioned(
+                        left: -20,
+                        bottom: -40,
+                        child: Container(
+                          width: 120,
+                          height: 120,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withValues(alpha: 0.1),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+              // Soft subtle bottom gradient overlay
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: 40,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withValues(alpha: 0.25),
+                      ],
                     ),
-            ),
-            if (icon != null)
-              Align(
-                alignment: Alignment.topRight,
-                child: IconButton(
-                  onPressed: () async {
-                    XFile? image = await ImagePicker()
-                        .pickImage(source: ImageSource.gallery);
-                    if (image != null) {
-                      String url = await context
-                              .read<FileUploadViewModel>()
-                              .pickedImageUpload(image, 'Cover') ??
-                          '';
-                      context.read<ProfileViewModel>().updateCoverImage(url: url);
-                    }
-                  },
-                  icon: Container(
-                    height: 40,
-                    width: 40,
-                    alignment: Alignment.center,
-                    decoration: const BoxDecoration(
-                        color: Colors.black, shape: BoxShape.circle),
-                    child: const Icon(Icons.edit, color: Colors.white, size: 18),
                   ),
                 ),
               ),
-          ],
-        ),
-      ),
-      Positioned(
-        left: 20,
-        top: coverHeight - (profileHeight / 1.4),
-        child: CircleAvatar(
-          radius: profileHeight / 1.4,
-          backgroundColor: PColors.white,
-          child: CircleAvatar(
-            radius: profileHeight / 1.5,
-            backgroundImage: (() {
-              final imageUrl = profileModel?.profileImageUrl;
-              bool isValidUrl = imageUrl != null && imageUrl.isNotEmpty && (imageUrl.startsWith('http://') || imageUrl.startsWith('https://'));
-              if (isValidUrl) {
-                debugPrint("Attempting to load profile avatar from network: $imageUrl");
-                return safeImageProvider(imageUrl, placeholderAsset: PImages.profile);
-              } else {
-                if (imageUrl != null && imageUrl.isNotEmpty) {
-                  debugPrint("Invalid or non-HTTP/HTTPS profile avatar URL ('$imageUrl'), falling back to asset: ${PImages.profile}");
-                } else {
-                  debugPrint("Profile avatar URL is null or empty, falling back to asset: ${PImages.profile}");
-                }
-                return AssetImage(PImages.profile) as ImageProvider;
-              }
-            })(),
-            onBackgroundImageError: (exception, stackTrace) {
-              // Log the error for debugging if NetworkImage itself fails
-              debugPrint("NetworkImage error loading profile avatar: $exception");
-              debugPrint("Attempted profile avatar URL: ${profileModel?.profileImageUrl}");
-            },
-          ),
-        ),
-      ),
-      Positioned(
-        top: coverHeight + 10,
-        right: 10,
-        child: Selector<WrapperViewModel, String>(
-          selector: (p0, p1) => p1.viewStatus,
-          builder: (context, value, child) => Row(
-            children: [
-              if (icon != null)
-                GestureDetector(
-                  onTap: () async {
-                    await context
-                        .read<ProfileAnalyticsViewModel>()
-                        .fetchProfileAnalytics(filter: '7days');
-                    context.pushNamed(PPages.profileAnalyticsPageUi);
-                  },
-                  child: SvgPicture.asset(icon!, height: 30),
-                ),
-              const SizedBox(width: 10),
-              WrapperViewStatus.profile == value
-                  ? GestureDetector(
-                      onTap: () {
-                        context.pushNamed(PPages.helpSupportUi);
-                      },
-                      child: SvgPicture.asset(PSvgs.help, height: 30),
-                    )
-                  : Container(),
-              WrapperViewStatus.profile == value
-                  ? const SizedBox(width: 10)
-                  : Container(),
             ],
           ),
         ),
-      ),
-    ],
-  );
-}
 
+        // 🔹 Profile Avatar
+        Positioned(
+          left: 20,
+          top: coverHeight - (avatarRadius * 1.2),
+          child: Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 3.5),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.15),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: CircleAvatar(
+              radius: avatarRadius,
+              backgroundColor: Colors.white,
+              child: ClipOval(
+                child: SizedBox(
+                  width: avatarRadius * 2,
+                  height: avatarRadius * 2,
+                  child: (() {
+                    final imageUrl = profileModel?.profileImageUrl;
+                    final bool isValidUrl = imageUrl != null &&
+                        imageUrl.isNotEmpty &&
+                        (imageUrl.startsWith('http://') || imageUrl.startsWith('https://'));
+
+                    if (isValidUrl) {
+                      return SafeCachedNetworkImage(
+                        imageUrl: imageUrl,
+                        fit: BoxFit.cover,
+                        placeholderAsset: PImages.profile,
+                      );
+                    } else {
+                      return Image.asset(
+                        PImages.profile,
+                        fit: BoxFit.cover,
+                      );
+                    }
+                  })(),
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        // 🔹 Top-Right Quick Action Buttons (Analytics & Help)
+        Positioned(
+          top: coverHeight + 10,
+          right: 16,
+          child: Selector<WrapperViewModel, String>(
+            selector: (p0, p1) => p1.viewStatus,
+            builder: (context, value, child) => Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (icon != null)
+                  InkWell(
+                    borderRadius: BorderRadius.circular(20),
+                    onTap: () async {
+                      await context
+                          .read<ProfileAnalyticsViewModel>()
+                          .fetchProfileAnalytics(filter: '7days');
+                      if (context.mounted) {
+                        context.pushNamed(PPages.profileAnalyticsPageUi);
+                      }
+                    },
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.06),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      padding: const EdgeInsets.all(8),
+                      child: SvgPicture.asset(icon!),
+                    ),
+                  ),
+                if (WrapperViewStatus.profile == value) ...[
+                  const SizedBox(width: 8),
+                  InkWell(
+                    borderRadius: BorderRadius.circular(20),
+                    onTap: () {
+                      context.pushNamed(PPages.helpSupportUi);
+                    },
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.06),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      padding: const EdgeInsets.all(8),
+                      child: SvgPicture.asset(PSvgs.help),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }

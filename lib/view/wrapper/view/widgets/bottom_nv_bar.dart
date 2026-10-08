@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:biz_zinda/Settings/until/PColors.dart';
-import 'package:biz_zinda/Settings/until/PSvgs.dart';
 import 'package:biz_zinda/view/upload_pages/view/ui.dart';
 import 'package:biz_zinda/view_model/connect_page_view_model.dart';
 import 'package:biz_zinda/view_model/profile_view_model.dart';
@@ -11,144 +8,6 @@ import 'package:biz_zinda/model/logged_in_user.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 
-// class BottomNavBar extends StatelessWidget {
-//   final StatefulNavigationShell navigationShell;
-//
-//   const BottomNavBar({super.key, required this.navigationShell});
-//
-//   void _onTap(int index) {
-//     navigationShell.goBranch(
-//       index,
-//       initialLocation: index == navigationShell.currentIndex,
-//     );
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return BottomAppBar(
-//       padding: EdgeInsets.zero,
-//       height: 110,
-//       clipBehavior: Clip.hardEdge,
-//       shadowColor: PColors.white,
-//       color:  Color(0xFF8A4FFF),
-//       child: Container(
-//         decoration: BoxDecoration(
-//             color:  Color(0xFF8A4FFF),
-//             border: Border(
-//                 top: BorderSide(color: PColors.white.withOpacity(0.3)))),
-//         child: Padding(
-//           padding: const EdgeInsets.all(17),
-//           child: Align(
-//             alignment: Alignment.bottomCenter,
-//             child: Row(
-//               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//               children: [
-//                 bottombaritem(
-//                     icon: PSvgs.home,
-//                     label: "Home",
-//                     fun: () => _onTap(0),
-//                     selected: navigationShell.currentIndex == 0),
-//                 bottombaritem(
-//                     icon: PSvgs.search,
-//                     label: "Search",
-//                     fun: () => _onTap(1),
-//                     selected: navigationShell.currentIndex == 1),
-//                 bottombaritem(
-//                     icon: PSvgs.upload,
-//                     label: "Upload",
-//                     fun: () => _handleUpload(context),
-//                     selected: false), // Upload is a bottom sheet, not a route
-//                 bottombaritem(
-//                     icon: PSvgs.connect,
-//                     label: "Connection",
-//                     fun: () => _handleConnection(context),
-//                     selected: navigationShell.currentIndex == 2),
-//                 bottombaritem(
-//                     icon: PSvgs.profile,
-//                     label: "Profile",
-//                     fun: () => _onTap(3),
-//                     selected: navigationShell.currentIndex == 3),
-//               ],
-//             ),
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-//
-//   void _handleUpload(BuildContext context) {
-//     final profileVM = context.read<ProfileViewModel>();
-//     final profileTypeRaw = profileVM.profileModel?.accountType ?? '';
-//     final profileType = profileTypeRaw.trim().toLowerCase();
-//     debugPrint('[BottomNav] Upload tapped. accountType="$profileTypeRaw" (normal=$profileType)');
-//     // Block only if accountType is "normal" or empty; allow freelancer and premium.
-//     if (profileType.isEmpty || profileType == "normal") {
-//       _onTap(3); // Go to profile tab which shows PlanUi for normal users
-//     } else {
-//       openBottomseet(context);
-//     }
-//   }
-//
-//   void _handleConnection(BuildContext context) {
-//     // Navigate to the Connect tab immediately for better UX.
-//     _onTap(2);
-//
-//     // Fetch latest profile/location data in the background.
-//     // Ignore any errors here; Connect page will display placeholders or retry.
-//     () async {
-//       final profileVM = context.read<ProfileViewModel>();
-//       await profileVM.fetchProfile();
-//       if (profileVM.profileModel?.lat != null &&
-//           profileVM.profileModel?.lng != null) {
-//         final connectVM = context.read<ConnectPageViewModel>();
-//         connectVM.updateLocation(
-//             profileVM.profileModel!.lat!, profileVM.profileModel!.lng!);
-//         connectVM.fetchNearestProfiles();
-//       }
-//     }();
-//   }
-//
-//   Widget bottombaritem(
-//       {required String label,
-//         required String icon,
-//         required Function()? fun,
-//         required bool selected}) {
-//     return GestureDetector(
-//       onTap: fun,
-//       child: Container(
-//           child: Padding(
-//             padding: const EdgeInsets.all(8.0),
-//             child: Column(
-//               children: [
-//                 SvgPicture.asset(
-//                   icon,
-//                   height: label == 'Upload' ? 50 : 24,
-//                 ),
-//                 const SizedBox(
-//                   height: 9,
-//                 ),
-//                 label == 'Upload'
-//                     ? Container()
-//                     : Container(
-//                   color: selected ? PColors.white : Colors.transparent,
-//                   height: 2,
-//                   width: 40,
-//                 )
-//               ],
-//             ),
-//           )),
-//     );
-//   }
-//
-//   void openBottomseet(BuildContext context) {
-//     showModalBottomSheet(
-//       shape: const BeveledRectangleBorder(),
-//       backgroundColor: PColors.white,
-//       context: context,
-//       builder: (context) => const UploadPagesUi(),
-//     );
-//   }
-// }
 class BottomNavBar extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
@@ -163,113 +22,148 @@ class BottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 60,
-      margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      decoration: BoxDecoration(
-        color: Colors.orange.shade100,
-
-        /// border
-        border: Border.all(
-          color: const Color(0xFFFB8C00).withOpacity(.25),
-        ),
-
-        borderRadius: BorderRadius.circular(30),
-
-        /// shadow
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(.10),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          )
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-
-          _item(
-            icon: Icons.home,
-            selected: navigationShell.currentIndex == 0,
-            onTap: () => _onTap(0),
-          ),
-
-          _item(
-            icon: Icons.search,
-            selected: navigationShell.currentIndex == 1,
-            onTap: () => _onTap(1),
-          ),
-
-          /// Upload Button
-          GestureDetector(
-            onTap: () {
-              if (isGuestUser(context)) return;
-              _handleUpload(context);
-            },
-            child: Container(
-              height: 40,
-              width: 40,
-              decoration: BoxDecoration(
-                color: const Color(0xFFFB8C00),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFFB8C00).withOpacity(.4),
-                    blurRadius: 8,
-                  )
-                ],
-              ),
-              child: const Icon(
-                Icons.add,
-                color: Colors.white,
-                size: 22,
+    return SafeArea(
+      top: false,
+      child: Container(
+        height: 76,
+        margin: const EdgeInsets.only(left: 14, right: 14, bottom: 8),
+        child: Stack(
+          alignment: Alignment.topCenter,
+          clipBehavior: Clip.none,
+          children: [
+            // White floating pill with arched center notch
+            Positioned.fill(
+              child: CustomPaint(
+                painter: _NavBarCustomPainter(),
               ),
             ),
-          ),
 
-          _item(
-            icon: Icons.location_on_outlined,
-            selected: navigationShell.currentIndex == 2,
-            onTap: () => _handleConnection(context),
-          ),
+            // Tab items row (Home, Search, [Gap], Map, Profile)
+            Positioned(
+              top: 16,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _item(
+                      icon: Icons.home_rounded,
+                      label: "Home",
+                      selected: navigationShell.currentIndex == 0,
+                      onTap: () => _onTap(0),
+                    ),
+                  ),
+                  Expanded(
+                    child: _item(
+                      icon: Icons.search_rounded,
+                      label: "Search",
+                      selected: navigationShell.currentIndex == 1,
+                      onTap: () => _onTap(1),
+                    ),
+                  ),
+                  const SizedBox(width: 58), // Space reserved for center button
+                  Expanded(
+                    child: _item(
+                      icon: Icons.location_on_rounded,
+                      label: "Map",
+                      selected: navigationShell.currentIndex == 2,
+                      onTap: () => _handleConnection(context),
+                    ),
+                  ),
+                  Expanded(
+                    child: _item(
+                      icon: Icons.person_rounded,
+                      label: "Profile",
+                      selected: navigationShell.currentIndex == 3,
+                      onTap: () {
+                        if (isGuestUser(context)) return;
+                        _onTap(3);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
-          /// Profile
-          _item(
-            icon: Icons.store,
-            selected: navigationShell.currentIndex == 3,
-            onTap: () {
-              if (isGuestUser(context)) return;
-              _onTap(3);
-            },
-          ),
-        ],
+            // Elevated Center (+) Upload Button
+            Positioned(
+              top: 5,
+              child: GestureDetector(
+                onTap: () {
+                  if (isGuestUser(context)) return;
+                  _handleUpload(context);
+                },
+                child: Container(
+                  height: 50,
+                  width: 50,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFB8C00),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFFB8C00).withValues(alpha: 0.4),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.add_rounded,
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _item({
     required IconData icon,
+    required String label,
     required bool selected,
     required VoidCallback onTap,
   }) {
+    const activeColor = Color(0xFFFB8C00);
+    const inactiveColor = Color(0xFF4A5568);
+
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(
-          color: selected ? Colors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(
-          icon,
-          size: 22,
-          color: selected
-              ? const Color(0xFFFB8C00)
-              : Colors.black54,
-        ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            size: 22,
+            color: selected ? activeColor : inactiveColor,
+          ),
+          const SizedBox(height: 3),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+              color: selected ? activeColor : inactiveColor,
+              height: 1.1,
+            ),
+          ),
+          const SizedBox(height: 3),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            height: 2.5,
+            width: selected ? 22 : 0,
+            decoration: BoxDecoration(
+              color: selected ? activeColor : Colors.transparent,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -277,7 +171,7 @@ class BottomNavBar extends StatelessWidget {
   void _handleUpload(BuildContext context) {
     final profileVM = context.read<ProfileViewModel>();
     final profileType =
-    (profileVM.profileModel?.accountType ?? '').trim().toLowerCase();
+        (profileVM.profileModel?.accountType ?? '').trim().toLowerCase();
 
     if (profileType.isEmpty || profileType == "normal") {
       _onTap(3);
@@ -285,6 +179,7 @@ class BottomNavBar extends StatelessWidget {
       openBottomseet(context);
     }
   }
+
   void _handleConnection(BuildContext context) async {
     _onTap(2);
 
@@ -295,10 +190,10 @@ class BottomNavBar extends StatelessWidget {
 
     final profileVM = context.read<ProfileViewModel>();
     await profileVM.fetchProfile();
+    if (!context.mounted) return;
 
     if (profileVM.profileModel?.lat != null &&
         profileVM.profileModel?.lng != null) {
-
       final connectVM = context.read<ConnectPageViewModel>();
 
       connectVM.updateLocation(
@@ -319,7 +214,7 @@ class BottomNavBar extends StatelessWidget {
         return;
       }
       final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.medium,
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.medium),
       );
       if (!context.mounted) return;
       context
@@ -330,27 +225,6 @@ class BottomNavBar extends StatelessWidget {
     }
   }
 
-  // void _handleConnection(BuildContext context) {
-  //   _onTap(2);
-  //
-  //   () async {
-  //     final profileVM = context.read<ProfileViewModel>();
-  //     await profileVM.fetchProfile();
-  //
-  //     if (profileVM.profileModel?.lat != null &&
-  //         profileVM.profileModel?.lng != null) {
-  //
-  //       final connectVM = context.read<ConnectPageViewModel>();
-  //
-  //       connectVM.updateLocation(
-  //           profileVM.profileModel!.lat!,
-  //           profileVM.profileModel!.lng!);
-  //
-  //       connectVM.fetchNearestStores();
-  //     }
-  //   }();
-  // }
-
   void openBottomseet(BuildContext context) {
     showModalBottomSheet(
       backgroundColor: Colors.white,
@@ -358,4 +232,80 @@ class BottomNavBar extends StatelessWidget {
       builder: (context) => const UploadPagesUi(),
     );
   }
+}
+
+class _NavBarCustomPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = Path();
+    const top = 16.0;
+    final bottom = size.height;
+    final r = (bottom - top) / 2; // Pill radius = 30
+    final cx = size.width / 2;
+    const domeR = 29.0;
+    const transitionW = 14.0;
+
+    // Start at top straight line right after top-left rounded corner
+    path.moveTo(r, top);
+
+    // Line to left start of dome
+    path.lineTo(cx - domeR - transitionW, top);
+
+    // Smooth curve up to the dome apex
+    path.cubicTo(
+      cx - domeR, top,
+      cx - domeR + 4, 1.5,
+      cx, 1.5,
+    );
+
+    // Smooth curve down to right side of dome
+    path.cubicTo(
+      cx + domeR - 4, 1.5,
+      cx + domeR, top,
+      cx + domeR + transitionW, top,
+    );
+
+    // Line to top-right corner
+    path.lineTo(size.width - r, top);
+
+    // Right rounded cap
+    path.arcToPoint(
+      Offset(size.width - r, bottom),
+      radius: Radius.circular(r),
+      clockwise: true,
+    );
+
+    // Bottom straight line
+    path.lineTo(r, bottom);
+
+    // Left rounded cap
+    path.arcToPoint(
+      Offset(r, top),
+      radius: Radius.circular(r),
+      clockwise: true,
+    );
+    path.close();
+
+    // 1. Soft Shadow
+    final shadowPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.08)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
+    canvas.drawPath(path.shift(const Offset(0, 3)), shadowPaint);
+
+    // 2. White Fill
+    final fillPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+    canvas.drawPath(path, fillPaint);
+
+    // 3. Subtle Border with brand orange accent
+    final borderPaint = Paint()
+      ..color = const Color(0xFFFB8C00).withValues(alpha: 0.18)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+    canvas.drawPath(path, borderPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

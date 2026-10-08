@@ -6,9 +6,6 @@ import 'package:biz_zinda/view/other_user_profile/view/other_user_profile_screen
 import 'package:biz_zinda/view/plan_ui/ui.dart';
 import 'package:biz_zinda/view/search_section/view/search_screen.dart';
 import 'package:biz_zinda/view/wrapper/view_model/view_model.dart';
-import 'package:biz_zinda/view_model/location_view_model.dart';
-import 'package:biz_zinda/view_model/profile_view_model.dart';
-import 'package:biz_zinda/view_model/subscription_view_model.dart';
 import 'package:provider/provider.dart';
 
 class WrapperBody extends StatefulWidget {
