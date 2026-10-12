@@ -51,6 +51,7 @@ class OfferingModel {
   final String? mediaType;
   final String? city;
   final String? state;
+  final String? category;
 
   int? likesCount;
   int? shareCount;
@@ -71,6 +72,7 @@ class OfferingModel {
     this.mediaType,
     this.city,
     this.state,
+    this.category,
     this.likesCount,
     this.shareCount,
     this.isLiked,
@@ -110,6 +112,7 @@ class OfferingModel {
       mediaType: json['mediaType']?.toString(),
       city: json['city']?.toString(),
       state: json['state']?.toString(),
+      category: json['category']?.toString(),
       likesCount: int.tryParse(json['likesCount']?.toString() ?? '0') ?? 0,
       shareCount: int.tryParse(json['shareCount']?.toString() ?? '0') ?? 0,
       isLiked: json['isLiked'] == true,

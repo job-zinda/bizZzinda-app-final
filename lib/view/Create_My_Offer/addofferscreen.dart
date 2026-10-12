@@ -190,9 +190,8 @@ import 'package:biz_zinda/Settings/widgets/text_widget.dart';
 import 'package:biz_zinda/model/logged_in_user.dart';
 import 'package:biz_zinda/utils/validator.dart';
 import 'package:biz_zinda/view/upload_pages/view/widgets/upload_button.dart';
+import 'package:biz_zinda/view_model/profile_view_model.dart';
 import 'package:provider/provider.dart';
-
-
 
 class AddOfferScreen extends StatefulWidget {
   const AddOfferScreen({super.key});
@@ -205,8 +204,26 @@ class _AddPostScreenState extends State<AddOfferScreen> {
   final TextEditingController _descriptionController = TextEditingController();
   String selectedCity = "Kochi";
   String selectedState = "Kerala";
+  String? _selectedCategory;
   final _formKey = GlobalKey<FormState>();
   String value = 'Anyone';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final profileVm = context.read<ProfileViewModel>();
+      if (profileVm.professionList.isEmpty) {
+        profileVm.fetchProfession();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _descriptionController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -283,7 +300,10 @@ class _AddPostScreenState extends State<AddOfferScreen> {
 
                       offerViewModel.createOffer(
                         description: _descriptionController.text,
-                        context: context, city: '', state: '',
+                        context: context,
+                        city: selectedCity,
+                        state: selectedState,
+                        category: _selectedCategory,
                       );
                     }
                   },
@@ -316,6 +336,56 @@ class _AddPostScreenState extends State<AddOfferScreen> {
                   validation: Validator.text,
                   filColor: PColors.white,
                 ),
+              ),
+              const SizedBox(height: 20),
+
+              Consumer<ProfileViewModel>(
+                builder: (context, profileVm, child) {
+                  final professions = profileVm.professionList;
+                  return DropdownButtonFormField<String>(
+                    value: professions.any((p) => p.name == _selectedCategory)
+                        ? _selectedCategory
+                        : null,
+                    decoration: InputDecoration(
+                      labelText: "Select Category",
+                      prefixIcon: const Icon(
+                        Icons.category_outlined,
+                        color: Color(0xFFFB8C00),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Color(0xFFFB8C00)),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Colors.black, width: 2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      errorBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Colors.red),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      focusedErrorBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Colors.red, width: 2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    items: professions
+                        .where((p) => p.name != null && p.name!.isNotEmpty)
+                        .map((p) => DropdownMenuItem<String>(
+                              value: p.name,
+                              child: Text(
+                                p.name!,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ))
+                        .toList(),
+                    onChanged: (val) {
+                      setState(() {
+                        _selectedCategory = val;
+                      });
+                    },
+                  );
+                },
               ),
               const SizedBox(height: 20),
 

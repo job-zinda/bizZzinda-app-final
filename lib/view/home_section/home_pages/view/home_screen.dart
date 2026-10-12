@@ -2,6 +2,7 @@ import 'package:biz_zinda/Terms_and_conditions/TermsAndConditionUi.dart';
 import 'package:biz_zinda/model/logged_in_user.dart';
 import 'package:biz_zinda/utils/api_service.dart';
 import 'package:biz_zinda/view/Create_My_Offer/OfferSectionWidget.dart';
+import 'package:biz_zinda/view/home_section/home_pages/view/widgets/category_filter_widget.dart';
 import 'package:biz_zinda/view/create_my_offer/offermodel.dart';
 import 'package:biz_zinda/view/Create_My_Offer/offer_veiw_model.dart';
 import 'package:biz_zinda/view/plansforyou/plansforyouUI.dart';
@@ -73,6 +74,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
     // Fetch profile data when the screen loads, mirroring the profile screen's behavior.
     context.read<ProfileViewModel>().fetchProfile();
+    context.read<ProfileViewModel>().fetchProfession();
            _showAssistantHint();
   }
 
@@ -521,6 +523,86 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 //     // );
                 //   },
                 // ),
+
+                // Offers Section Header
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFB8C00).withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Icons.percent_rounded,
+                          color: Color(0xFFFB8C00),
+                          size: 22,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Offers",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                            Text(
+                              "Exclusive offers from our freelancers",
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      InkWell(
+                        onTap: () {
+                          context.read<OfferViewModel>().selectedCategory = null;
+                          context.read<OfferViewModel>().refreshOffer();
+                        },
+                        borderRadius: BorderRadius.circular(20),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFB8C00).withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                "See All",
+                                style: TextStyle(
+                                  color: Color(0xFFFB8C00),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              SizedBox(width: 2),
+                              Icon(
+                                Icons.arrow_forward_ios,
+                                size: 10,
+                                color: Color(0xFFFB8C00),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const CategoryFilterWidget(),
 
                  OfferSection(id: "some_id"),
                    // OfferSection(),

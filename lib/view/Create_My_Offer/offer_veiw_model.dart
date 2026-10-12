@@ -55,6 +55,14 @@ class OfferViewModel with ChangeNotifier {
   dynamic selectedThumbanilFile;
 
 
+  /// 🔹 CATEGORY FILTER
+  String? _selectedCategory;
+  String? get selectedCategory => _selectedCategory;
+  set selectedCategory(String? value) {
+    _selectedCategory = value;
+    notifyListeners();
+  }
+
   /// 🔹 PAGINATION CONTROLLER
   final PagingController<int, OfferingModel> _offerController =
   PagingController(firstPageKey: 1);
@@ -83,6 +91,7 @@ class OfferViewModel with ChangeNotifier {
     required String description,
     required String city,
     required String state,
+    String? category,
     required BuildContext context,
   }) async {
     /// Ignore repeat taps while a create is already running. The backend also
@@ -108,6 +117,7 @@ class OfferViewModel with ChangeNotifier {
         "bio": description,
         "city": selectedCity,
         "state": selectedState,
+        "category": category,
         "latitude": pos.latitude,
         "longitude": pos.longitude,
       };
@@ -224,12 +234,20 @@ class OfferViewModel with ChangeNotifier {
           ? <String, String>{}
           : await LoggedInUser.getAuthorizationHeader();
 
+      final Map<String, dynamic> queryParams = {
+        "pageNumber": page,
+        "pageSize": 10,
+      };
+
+      if (_selectedCategory != null &&
+          _selectedCategory!.isNotEmpty &&
+          _selectedCategory != 'All') {
+        queryParams["category"] = _selectedCategory;
+      }
+
       Response response = await Dio().get(
         url,
-        queryParameters: {
-          "pageNumber": page,
-          "pageSize": 10,
-        },
+        queryParameters: queryParams,
         options: Options(headers: {
           ...headers,
           "X-Platform": "bizzzinda",
